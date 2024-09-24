@@ -24,7 +24,7 @@ const errorToster = (message) => {
     });
 };
 const loginUser = {
-    id: "9313190741",
+    id: "919313190741",
     name: 'Jay Chauhan',
     path: '/favicon.png',
     designation: 'Software Developer',
@@ -89,7 +89,7 @@ const Chat = () => {
 
     useEffect(() => {
         const getSms = async () => {
-            const response = await getRequest("/v1/sms/getSms", {}, headers);
+            const response = await getRequest("/v1/whatsapp/getWhatsappMessages", {}, headers);
             setContactList(response);
             setFilteredItems(response);
         }
@@ -130,9 +130,9 @@ const Chat = () => {
             let user: any = list.find((d) => d.userId === selectedUser.userId);
             let messageData = {
                 to: selectedUser.userId,
-                content: textMessage
+                message: textMessage
             };
-            let response = await postRequest("/v1/sms/sendSms", messageData, {}, headers);
+            let response = await postRequest("/v1/whatsapp/sendMessage", messageData, {}, headers);
 
             let date = getCurrentFormattedDate();
             if (response.status == "success") {
