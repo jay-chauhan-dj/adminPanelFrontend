@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import sortBy from 'lodash/sortBy';
 import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../../store/themeConfigSlice';
-import { postRequest } from '../../utils/Request';
+import { getRequest, postRequest } from '../../utils/Request';
 import { downloadExcel } from 'react-export-table-to-excel';
 
 const Basic = () => {
@@ -158,9 +158,9 @@ const Basic = () => {
         const fetchData = async () => {
             const headers = {
                 "Content-Type": "application/json",
-                "accessToken": localStorage.getItem('accessToken')
+                "authorization": "Bearer " + localStorage.getItem('accessToken')
             };
-            const data = await postRequest('/v1/contactData', {}, {}, headers); // Change this to your actual API endpoint
+            const data = await getRequest('/v1/money/getTransection', {}, headers); // Change this to your actual API endpoint
             setData(data);
             const sortedData = sortBy(data, 'id');
             setInitialRecords(sortedData);
@@ -189,7 +189,53 @@ const Basic = () => {
     }, [sortStatus, initialRecords]);
 
     const columnsDefination = [
-        { accessor: 'id', title: 'ID', sortable: true, render: ({ id }) => <strong className="text-info">#{id}</strong> },
+        { title: 'ID', sortable: true, render: (row, index) => <strong className="text-info">#{index + 1}</strong>, },
+        {
+            accessor: 'transectionTitle',
+            title: 'Title',
+            sortable: true,
+            render: ({ transectionTitle }) => (
+                <div className="flex items-center gap-2">
+                    <div className="font-semibold">{transectionTitle}</div>
+                </div>
+            ),
+        },
+        {
+            accessor: 'paymentMethodName',
+            title: 'Payment Method',
+            sortable: true,
+            render: ({ paymentMethodName }) => (
+                <div className="flex items-center gap-2">
+                    <div className="font-semibold">{paymentMethodName}</div>
+                </div>
+            ),
+        },
+        {
+            accessor: 'transectionType',
+            title: 'Payment Method',
+            sortable: true,
+            render: ({ transectionType }) => (
+                (transectionType == '1') ? (
+                    <span className="badge bg-success">Income</span>
+                ) : (
+                    (transectionType == '0') ? (
+                        <span className="badge bg-danger">Expance</span>
+                    ) : (
+                        <span className="badge bg-info">Transfer</span>
+                    )
+                )
+            ),
+        },
+        {
+            accessor: 'bankName',
+            title: 'Bank Name',
+            sortable: true,
+            render: ({ bankName }) => (
+                <div className="flex items-center gap-2">
+                    <div className="font-semibold">{bankName}</div>
+                </div>
+            ),
+        },
         {
             accessor: 'name',
             title: 'Name',
@@ -201,22 +247,22 @@ const Basic = () => {
             ),
         },
         {
-            accessor: 'email',
-            title: 'Email Address',
-            render: ({ email }) => (
-                <div className="flex items-center gap-2">
-                    <a href={`mailto:${email}`} className="text-primary hover:underline">
-                        {email}
-                    </a>
-                </div>
-            ),
-        },
-        {
-            accessor: 'message',
-            title: 'Message',
+            accessor: 'transectionTime',
+            title: 'Name',
             sortable: true,
-            render: ({ message }) => (
-                <div>{message}</div>
+            render: ({ transectionTime }) => (
+                <div className="flex items-center gap-2">
+                    <div className="font-semibold">{
+                        new Date(transectionTime).toLocaleString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: 'numeric',
+                            minute: 'numeric',
+                            hour12: true,
+                        })
+                    }</div>
+                </div>
             ),
         }
     ];
