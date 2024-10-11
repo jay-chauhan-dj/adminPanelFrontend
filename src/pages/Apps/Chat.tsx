@@ -668,12 +668,12 @@ const Chat = () => {
                             <div className="p-4 absolute bottom-0 left-0 w-full">
                                 <div className="sm:flex w-full space-x-3 rtl:space-x-reverse items-center">
                                     <div className="relative flex-1">
-                                        <input
+                                        <textarea
                                             className="form-input rounded-full border-0 bg-[#f4f4f4] px-12 focus:outline-none py-2"
                                             placeholder="Type a message"
                                             value={textMessage}
                                             onChange={(e: any) => setTextMessage(e.target.value)}
-                                            onKeyUp={sendMessageHandle}
+                                            rows={1}
                                         />
                                         <button type="button" className="absolute ltr:left-4 rtl:right-4 top-1/2 -translate-y-1/2 hover:text-primary">
                                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
