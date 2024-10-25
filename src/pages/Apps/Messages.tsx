@@ -70,7 +70,7 @@ const Messages = ({ selectedUser, date }) => {
                 </h4>
             </div>
             {selectedUser.messages[date].map((message, index) => (
-                <Chats selectedUser={selectedUser} message={message} key={index} loginUser={{ path: "/favicon.png" }} index={index} />
+                <Chats selectedUser={selectedUser} message={message} key={index} loginUser={{ path: "/assets/images/display-pic.jpg" }} index={index} />
             ))}
         </>
     );
