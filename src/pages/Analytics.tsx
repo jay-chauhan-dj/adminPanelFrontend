@@ -61,19 +61,19 @@ const Analytics = () => {
         setNewBankBalance(bankBalance);
         setUpdateBankBalance(!updateBankBalance);
     }
-    const AddBankBalance = async () => {
-        if (addBankBalance) {
-            if (addValue != 0) {
-                const newBalance = parseFloat(bankBalance) + parseFloat(addValue);
-                await postRequest("/v1/updateBankBalance", {
-                    newBankBalance: newBalance
-                }, {}, headers);
-                setBankBalance(newBalance);
-                setAddValue(0);
-            }
-        }
-        setAddBankBalance(!addBankBalance);
-    }
+    // const AddBankBalance = async () => {
+    //     if (addBankBalance) {
+    //         if (addValue != 0) {
+    //             const newBalance = parseFloat(bankBalance) + parseFloat(addValue);
+    //             await postRequest("/v1/updateBankBalance", {
+    //                 newBankBalance: newBalance
+    //             }, {}, headers);
+    //             setBankBalance(newBalance);
+    //             setAddValue(0);
+    //         }
+    //     }
+    //     setAddBankBalance(!addBankBalance);
+    // }
     useEffect(() => {
         const getOsDetails = async () => {
             const response = await getRequest("/v1/dashboard/getVisitorOs", {}, headers);
