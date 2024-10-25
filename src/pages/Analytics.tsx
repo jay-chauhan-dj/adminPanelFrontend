@@ -26,7 +26,7 @@ const Analytics = () => {
 
     const headers = {
         "Content-Type": "application/json",
-        "authorization": "Bearer " + localStorage.getItem('accessToken')
+        "authorization": "Bearer " + localStorage.getItem("accessToken")
     };
 
     const formateDate = (dateSting: string) => {
