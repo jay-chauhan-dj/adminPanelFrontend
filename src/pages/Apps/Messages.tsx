@@ -26,7 +26,7 @@ const Chats = ({ selectedUser, message, loginUser, index }) => {
                             className={`dark:bg-gray-800 p-4 py-2 rounded-md bg-black/10 ${message.fromUserId == selectedUser.userId
                                 ? 'ltr:rounded-br-none rtl:rounded-bl-none !bg-primary text-white'
                                 : 'ltr:rounded-bl-none rtl:rounded-br-none'
-                                }`} style={{ width: '50vw' }}
+                                }`} style={{ maxWidth: '50vw', overflowWrap: 'break-word', wordWrap: 'break-word', display: 'inline-block' }}
                             dangerouslySetInnerHTML={createMarkup(message.text)}
                         >
                         </div>
@@ -57,7 +57,7 @@ const Chats = ({ selectedUser, message, loginUser, index }) => {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 
