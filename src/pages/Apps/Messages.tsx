@@ -7,9 +7,9 @@ const Chats = ({ selectedUser, message, loginUser, index }) => {
 
     return (
         <div className="space-y-5 p-4 sm:pb-0 pb-[68px]" key={index}>
-            <div className={`flex items-start gap-3 ${selectedUser.userId === message.fromUserId ? 'justify-end' : ''}`}>
-                <div className={`flex-none ${selectedUser.userId === message.fromUserId ? 'order-2' : ''}`}>
-                    {selectedUser.userId === message.fromUserId ? (
+            <div className={`flex items-start gap-3 ${selectedUser.userId == message.fromUserId ? 'justify-end' : ''}`}>
+                <div className={`flex-none ${selectedUser.userId == message.fromUserId ? 'order-2' : ''}`}>
+                    {selectedUser.userId == message.fromUserId ? (
                         <img src={`${loginUser.path}`} className="rounded-full h-10 w-10 object-cover" alt="" />
                     ) : (
                         ''
@@ -23,14 +23,14 @@ const Chats = ({ selectedUser, message, loginUser, index }) => {
                 <div className="space-y-2">
                     <div className="flex items-center gap-3">
                         <div
-                            className={`dark:bg-gray-800 p-4 py-2 rounded-md bg-black/10 ${message.fromUserId === selectedUser.userId
+                            className={`dark:bg-gray-800 p-4 py-2 rounded-md bg-black/10 ${message.fromUserId == selectedUser.userId
                                 ? 'ltr:rounded-br-none rtl:rounded-bl-none !bg-primary text-white'
                                 : 'ltr:rounded-bl-none rtl:rounded-br-none'
-                                }`}
+                                }`} style={{ width: '50vw' }}
                             dangerouslySetInnerHTML={createMarkup(message.text)}
                         >
                         </div>
-                        <div className={`${selectedUser.userId === message.fromUserId ? 'hidden' : ''}`}>
+                        <div className={`${selectedUser.userId == message.fromUserId ? 'hidden' : ''}`}>
                             <svg
                                 className="w-5 h-5 text-black/70 dark:text-white/70 hover:!text-primary"
                                 viewBox="0 0 24 24"
@@ -52,7 +52,7 @@ const Chats = ({ selectedUser, message, loginUser, index }) => {
                             </svg>
                         </div>
                     </div>
-                    <div className={`text-xs text-white-dark ${selectedUser.userId === message.fromUserId ? 'ltr:text-right rtl:text-left' : ''}`}>
+                    <div className={`text-xs text-white-dark ${selectedUser.userId == message.fromUserId ? 'ltr:text-right rtl:text-left' : ''}`}>
                         {message.time ? message.time : '5h ago'}
                     </div>
                 </div>
