@@ -1,11 +1,16 @@
 import { Link } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Fragment } from 'react';
 import * as Yup from 'yup';
 import { Field, Form, Formik } from 'formik';
 import Swal from 'sweetalert2';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import { useDispatch } from 'react-redux';
 import { getRequest, postRequest } from '../../utils/Request';
+import { Dialog, Transition } from '@headlessui/react';
+import MaskedInput from 'react-text-mask';
+import Select from 'react-select';
+import Flatpickr from 'react-flatpickr';
+import 'flatpickr/dist/flatpickr.css';
 
 const Validation = () => {
     const headers = {
@@ -15,6 +20,18 @@ const Validation = () => {
     const [banks, setBanks] = useState([]);
     const [users, setUsers] = useState([]);
     const [paymentMethods, setPaymentMethods] = useState([]);
+    const [verifyModal, setVerify] = useState(false);
+    const [registerModal, setRegister] = useState(false);
+    const [qrSrc, setQrSrc] = useState("");
+    const [userVerified, setVerification] = useState(false);
+    const [contacts, setContacts] = useState([{
+        value: '',
+        label: ''
+    }]);
+    const [paymentTypes, setPaymentTypes] = useState([{
+        value: '',
+        label: ''
+    }]);
 
     const dispatch = useDispatch();
     useEffect(() => {
@@ -36,7 +53,7 @@ const Validation = () => {
         setPaymentMethods(response);
     }
 
-    const submitForm = async (formData: any, resetForm: any) => {
+    const saveTransection = async (formData: any, resetForm: any) => {
         const response = await postRequest("/v1/money/saveTransection", formData, {}, headers);
         const toast = Swal.mixin({
             toast: true,
@@ -60,6 +77,128 @@ const Validation = () => {
         }
     };
 
+    const createPaymentLink = async (formData: any, resetForm: any) => {
+        const response = await postRequest("/v1/payment/payment-link/create", formData, {}, headers);
+        const toast = Swal.mixin({
+            toast: true,
+            position: 'top',
+            showConfirmButton: false,
+            timer: 3000,
+        });
+        if (response.success) {
+            console.log(response);
+
+            toast.fire({
+                icon: 'success',
+                title: response.message,
+                padding: '10px 20px',
+            });
+            resetForm(); // Reset the form
+        } else {
+            toast.fire({
+                icon: 'error',
+                title: response.message,
+                padding: '10px 20px',
+            });
+        }
+    };
+
+    const getContacts = async () => {
+        const response = await getRequest("/v1/contact/get", {}, headers);
+        const toast = Swal.mixin({
+            toast: true,
+            position: 'top',
+            showConfirmButton: false,
+            timer: 3000,
+        });
+        if (response.success) {
+            let options = response.contacts.map((contact: { id: any; firstName: any; lastName: any; }) => ({
+                value: contact.id,
+                label: `${contact.firstName} ${contact.lastName}`.trim()
+            }));
+
+            setContacts(options);
+        } else {
+            toast.fire({
+                icon: 'error',
+                title: response.message,
+                padding: '10px 20px',
+            });
+        }
+    };
+
+    const getPaymentTypes = async () => {
+        const response = await getRequest("/v1/payment/types", {}, headers);
+        const toast = Swal.mixin({
+            toast: true,
+            position: 'top',
+            showConfirmButton: false,
+            timer: 3000,
+        });
+        if (response.success) {
+            let options = Object.entries(response.data).map(([key, value]) => ({
+                value: key,
+                label: key.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase()) + "- Prefix: " + value
+            }));
+
+            setPaymentTypes(options);
+        } else {
+            toast.fire({
+                icon: 'error',
+                title: response.message,
+                padding: '10px 20px',
+            });
+        }
+    };
+
+    const verifyUser = async (formData: any, resetForm: any) => {
+        const response = await postRequest("/v1/2fa/verify", formData, {}, headers);
+        const toast = Swal.mixin({
+            toast: true,
+            position: 'top',
+            showConfirmButton: false,
+            timer: 3000,
+        });
+        if (response.success) {
+            toast.fire({
+                icon: 'success',
+                title: response.message,
+                padding: '10px 20px',
+            });
+            resetForm(); // Reset the form
+            setVerify(false);
+            getContacts();
+            getPaymentTypes();
+            setVerification(true);
+        } else {
+            toast.fire({
+                icon: 'error',
+                title: response.message,
+                padding: '10px 20px',
+            });
+        }
+    };
+
+    const register2faUser = async () => {
+        const response = await postRequest("/v1/2fa/create", {}, {}, headers);
+        const toast = Swal.mixin({
+            toast: true,
+            position: 'top',
+            showConfirmButton: false,
+            timer: 3000,
+        });
+        if (response.success) {
+            setQrSrc(response.qrUrl)
+            setRegister(true);
+        } else {
+            toast.fire({
+                icon: 'error',
+                title: response.message,
+                padding: '10px 20px',
+            });
+        }
+    }
+
     const formValidator = Yup.object().shape({
         title: Yup.string().required('Please Enter the title'),
         amount: Yup.string().required('Please Enter the amount'),
@@ -67,6 +206,27 @@ const Validation = () => {
         bank: Yup.string().required('Please Select the bank'),
         method: Yup.string().required('Please Select the method')
     });
+
+    const linkFormValidator = Yup.object().shape({
+        linkPurpose: Yup.string().required('Please Enter the title'),
+        linkExpiryTime: Yup.string().required('Please Enter the time'),
+        contactId: Yup.string().required('Please Select the person'),
+        linkType: Yup.string().required('Please Select the linkType'),
+        amount: Yup.string().required('Please Select the amount')
+    });
+
+    const userValidator = Yup.object().shape({
+        code: Yup.number().min(6).required('Please Enter the code'),
+    });
+
+    const MaskedInputField = ({ field, form, mask, ...props }) => (
+        <MaskedInput
+            {...field}
+            {...props}
+            mask={mask}
+            onChange={(e) => form.setFieldValue(field.name, e.target.value)}
+        />
+    );
 
     return (
         <div>
@@ -82,9 +242,7 @@ const Validation = () => {
             </ul>
 
             <div className="pt-5 space-y-8">
-
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                    {/* Custom Styles */}
+                <div className="grid grid-cols-2 xl:grid-cols-2 gap-6">
                     <div className="panel" id="custom_styles">
                         <div className="flex items-center justify-between mb-5">
                             <h5 className="font-semibold text-lg dark:text-white-light">Add Transactions</h5>
@@ -101,7 +259,7 @@ const Validation = () => {
                                 }}
                                 validationSchema={formValidator}
                                 onSubmit={(values, { resetForm }) => {
-                                    submitForm(values, resetForm);
+                                    saveTransection(values, resetForm);
                                 }}
                             >
                                 {({ errors, submitCount, touched, values, setFieldValue }) => (
@@ -207,9 +365,278 @@ const Validation = () => {
                             </Formik>
                         </div>
                     </div>
+                    <div className="panel" id="custom_styles">
+                        <div className="flex items-center justify-between mb-5">
+                            <h5 className="font-semibold text-lg dark:text-white-light">Create Payment Link</h5>
+                        </div>
+
+                        {
+                            (!userVerified) ? (
+                                <div className="md-5">
+                                    <div className="flex items-center justify-center">
+                                        {/* <button type="button" onClick={() => register2faUser()} className="btn btn-primary">
+                                            Register For 2FA
+                                        </button> */}
+                                        <button type="button" onClick={() => setVerify(true)} className="btn btn-success ltr:ml-4 rtl:mr-4">
+                                            Verify Your Self
+                                        </button>
+                                    </div>
+                                    <Transition appear show={verifyModal} as={Fragment}>
+                                        <Dialog as="div" open={verifyModal} onClose={() => setVerify(false)}>
+                                            <Transition.Child
+                                                as={Fragment}
+                                                enter="ease-out duration-300"
+                                                enterFrom="opacity-0"
+                                                enterTo="opacity-100"
+                                                leave="ease-in duration-200"
+                                                leaveFrom="opacity-100"
+                                                leaveTo="opacity-0"
+                                            >
+                                                <div className="fixed inset-0" />
+                                            </Transition.Child>
+                                            <div className="fixed inset-0 bg-[black]/60 z-[999] overflow-y-auto">
+                                                <div className="flex items-center justify-center min-h-screen px-4">
+                                                    <Transition.Child
+                                                        as={Fragment}
+                                                        enter="ease-out duration-300"
+                                                        enterFrom="opacity-0 scale-95"
+                                                        enterTo="opacity-100 scale-100"
+                                                        leave="ease-in duration-200"
+                                                        leaveFrom="opacity-100 scale-100"
+                                                        leaveTo="opacity-0 scale-95"
+                                                    >
+                                                        <Dialog.Panel as="div" className="panel border-0 p-0 rounded-lg overflow-hidden w-full max-w-lg my-8 text-black dark:text-white-dark">
+                                                            <div className="flex bg-[#fbfbfb] dark:bg-[#121c2c] items-center justify-between px-5 py-3">
+                                                                <h5 className="font-bold text-lg">2Fa Authentication</h5>
+                                                                <button type="button" className="text-white-dark hover:text-dark" onClick={() => setVerify(false)}>
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                                                </button>
+                                                            </div>
+                                                            <div className="p-5">
+                                                                <Formik
+                                                                    initialValues={{
+                                                                        code: ''
+                                                                    }}
+                                                                    validationSchema={userValidator}
+                                                                    onSubmit={(values, { resetForm }) => {
+                                                                        verifyUser(values, resetForm);
+                                                                    }}
+                                                                >
+                                                                    {({ errors, submitCount, touched, values, setFieldValue }) => (
+                                                                        <Form className="space-y-5" >
+                                                                            <div className="grid grid-cols-1 md:grid-cols-1">
+                                                                                <div className={submitCount ? (errors.code ? 'has-error' : 'has-success') : ''}>
+                                                                                    <Field
+                                                                                        name="code"
+                                                                                        id="code"
+                                                                                        value={values.code}
+                                                                                        type="text"
+                                                                                        placeholder="Enter 2FA Code"
+                                                                                        className="form-input"
+                                                                                        component={MaskedInputField}
+                                                                                        mask={[/[0-9]/, /[0-9]/, /[0-9]/, /[0-9]/, /[0-9]/, /[0-9]/]}
+                                                                                    />
+                                                                                    {submitCount && errors.code ? (
+                                                                                        <div className="text-danger mt-1">{errors.code}</div>
+                                                                                    ) : (
+                                                                                        submitCount ? <div className="text-success mt-1">Looks Good!</div> : ""
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+
+                                                                            <div className="flex justify-end items-center mt-8">
+                                                                                <button
+                                                                                    type="submit"
+                                                                                    className="btn btn-primary"
+                                                                                >
+                                                                                    Verify
+                                                                                </button>
+                                                                                <button type="button" className="btn btn-outline-danger ltr:ml-4 rtl:mr-4" onClick={() => setVerify(false)}>
+                                                                                    Discard
+                                                                                </button>
+                                                                            </div>
+                                                                        </Form>
+                                                                    )}
+                                                                </Formik>
+                                                            </div>
+                                                        </Dialog.Panel>
+                                                    </Transition.Child>
+                                                </div>
+                                            </div>
+                                        </Dialog>
+                                    </Transition>
+                                    <Transition appear show={registerModal} as={Fragment}>
+                                        <Dialog as="div" open={registerModal} onClose={() => setRegister(false)}>
+                                            <Transition.Child
+                                                as={Fragment}
+                                                enter="ease-out duration-300"
+                                                enterFrom="opacity-0"
+                                                enterTo="opacity-100"
+                                                leave="ease-in duration-200"
+                                                leaveFrom="opacity-100"
+                                                leaveTo="opacity-0"
+                                            >
+                                                <div className="fixed inset-0" />
+                                            </Transition.Child>
+                                            <div className="fixed inset-0 bg-[black]/60 z-[999] overflow-y-auto">
+                                                <div className="flex items-center justify-center min-h-screen px-4">
+                                                    <Transition.Child
+                                                        as={Fragment}
+                                                        enter="ease-out duration-300"
+                                                        enterFrom="opacity-0 scale-95"
+                                                        enterTo="opacity-100 scale-100"
+                                                        leave="ease-in duration-200"
+                                                        leaveFrom="opacity-100 scale-100"
+                                                        leaveTo="opacity-0 scale-95"
+                                                    >
+                                                        <Dialog.Panel as="div" className="panel border-0 p-0 rounded-lg overflow-hidden w-full max-w-lg my-8 text-black dark:text-white-dark">
+                                                            <div className="flex bg-[#fbfbfb] dark:bg-[#121c2c] items-center justify-between px-5 py-3">
+                                                                <h5 className="font-bold text-lg">2Fa Authentication</h5>
+                                                                <button type="button" className="text-white-dark hover:text-dark" onClick={() => setRegister(false)}>
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                                                </button>
+                                                            </div>
+                                                            <div className="p-5">
+                                                                <h5 className="text-md">Scan QR In Google Authentocator App</h5><br />
+                                                                <center>
+                                                                    <img src={qrSrc} />
+                                                                </center>
+                                                            </div>
+                                                        </Dialog.Panel>
+                                                    </Transition.Child>
+                                                </div>
+                                            </div>
+                                        </Dialog>
+                                    </Transition>
+                                </div>
+                            ) : (
+                                <div className="mb-5">
+                                    <Formik
+                                        initialValues={{
+                                            linkPurpose: '',
+                                            linkExpiryTime: '',
+                                            contactId: '',
+                                            linkType: '',
+                                            amount: '',
+                                            linkNotify: {
+                                                "send_sms": true,
+                                                "send_email": true
+                                            },
+                                        }}
+                                        validationSchema={linkFormValidator}
+                                        onSubmit={(values, { resetForm }) => {
+                                            createPaymentLink(values, resetForm);
+                                        }}
+                                    >
+                                        {({ errors, submitCount, touched, values, setFieldValue }) => (
+                                            <Form className="space-y-5" >
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                                    <div className={submitCount ? (errors.linkPurpose ? 'has-error' : 'has-success') : ''}>
+                                                        <label htmlFor="linkPurpose">Payment For</label>
+                                                        <Field name="linkPurpose" type="text" id="linkPurpose" placeholder="Enter Transaction Title" className="form-input" />
+                                                        {submitCount && errors.linkPurpose ? (
+                                                            <div className="text-danger mt-1">{errors.linkPurpose}</div>
+                                                        ) : (
+                                                            submitCount ? <div className="text-success mt-1">Looks Good!</div> : ""
+                                                        )}
+                                                    </div>
+
+                                                    <div className={submitCount ? (errors.amount ? 'has-error' : 'has-success') : ''}>
+                                                        <label htmlFor="amount">Payment Amount</label>
+                                                        <Field name="amount" type="text" id="amount" placeholder="Enter Transaction Amount" className="form-input" />
+                                                        {submitCount && errors.amount ? (
+                                                            <div className="text-danger mt-1">{errors.amount}</div>
+                                                        ) : (
+                                                            submitCount ? <div className="text-success mt-1">Looks Good!</div> : ""
+                                                        )}
+                                                    </div>
+
+                                                    <div className={(submitCount ? (errors.contactId ? 'has-error custom-select' : 'has-success custom-select') : 'custom-select')}>
+                                                        <label htmlFor="contactId">Person</label>
+                                                        <Select
+                                                            name="contactId"
+                                                            id="contactId"
+                                                            placeholder="Select person"
+                                                            options={contacts}
+                                                            onChange={(selectedOption) => setFieldValue('contactId', selectedOption.value)}
+                                                        />
+                                                        {submitCount && errors.contactId ? (
+                                                            <div className="text-danger mt-1">{errors.contactId}</div>
+                                                        ) : (
+                                                            submitCount ? <div className="text-success mt-1">Looks Good!</div> : ""
+                                                        )}
+                                                    </div>
+
+                                                    <div className={(submitCount ? (errors.linkType ? 'has-error custom-select' : 'has-success custom-select') : 'custom-select')}>
+                                                        <label htmlFor="linkType">Link Type</label>
+                                                        <Select
+                                                            name="linkType"
+                                                            id="linkType"
+                                                            placeholder="Select payment type"
+                                                            options={paymentTypes}
+                                                            onChange={(selectedOption) => setFieldValue('linkType', selectedOption.value)}
+                                                        />
+                                                        {submitCount && errors.linkType ? (
+                                                            <div className="text-danger mt-1">{errors.linkType}</div>
+                                                        ) : (
+                                                            submitCount ? <div className="text-success mt-1">Looks Good!</div> : ""
+                                                        )}
+                                                    </div>
+
+                                                    <div className={(submitCount ? (errors.linkExpiryTime ? 'has-error' : 'has-success') : '') + 'custom-select'}>
+                                                        <label htmlFor="linkExpiryTime">Link Expiry</label>
+                                                        <Flatpickr
+                                                            data-enable-time
+                                                            options={{
+                                                                enableTime: true,
+                                                                dateFormat: 'Y-m-d H:i',
+                                                                position: 'auto left',
+                                                            }}
+                                                            name="linkExpiryTime"
+                                                            id="linkExpiryTime"
+                                                            className="form-input"
+                                                            onChange={(date) => setFieldValue('linkExpiryTime', date[0])}
+                                                        />
+                                                        {submitCount && errors.linkExpiryTime ? (
+                                                            <div className="text-danger mt-1">{errors.linkExpiryTime}</div>
+                                                        ) : (
+                                                            submitCount ? <div className="text-success mt-1">Looks Good!</div> : ""
+                                                        )}
+                                                    </div>
+
+                                                    <div className={submitCount ? (errors.linkNotify ? 'has-error' : 'has-success') : ''}>
+                                                        <label htmlFor="linkNotify">Send Notificaton</label>
+                                                        <div className="flex">
+                                                            <Field name="linkNotify.send_sms" id="linkNotify" type="checkbox" className="form-checkbox" />
+                                                            <label htmlFor="linkNotify.send_sms" className="text-white-dark font-semibold">
+                                                                SMS
+                                                            </label>
+                                                            <Field name="linkNotify.send_email" id="linkNotify" type="checkbox" className="form-checkbox ml-12" />
+                                                            <label htmlFor="linkNotify.send_email" className="text-white-dark font-semibold">
+                                                                Email
+                                                            </label>
+                                                        </div>
+                                                        {submitCount && errors.linkNotify ? <div className="text-danger mt-1">{errors.linkNotify}</div> : ''}
+                                                    </div>
+                                                </div>
+
+                                                <button
+                                                    type="submit"
+                                                    className="btn btn-primary !mt-6"
+                                                >
+                                                    Submit Form
+                                                </button>
+                                            </Form>
+                                        )}
+                                    </Formik>
+                                </div>
+                            )
+                        }
+
+                    </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 
