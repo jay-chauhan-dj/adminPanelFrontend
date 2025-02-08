@@ -82,10 +82,6 @@ const DragAndDrop = () => {
         timer: 3000,
     });
 
-    useEffect(() => {
-        dispatch(setPageTitle('NAS'));
-    });
-
     const getNASTree = async () => {
         const response = await getRequest("/v1/nas/get", {}, headers);
         if (response.success) {
@@ -98,6 +94,11 @@ const DragAndDrop = () => {
             });
         }
     }
+    
+    useEffect(() => {
+        getNASTree();
+        dispatch(setPageTitle('NAS'));
+    }, [dispatch]);
 
     const register2faUser = async () => {
         const response = await postRequest("/v1/2fa/create", {}, {}, headers);
