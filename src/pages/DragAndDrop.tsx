@@ -3,120 +3,131 @@ import { useEffect, useState } from 'react';
 import { ReactSortable } from 'react-sortablejs';
 import { setPageTitle } from '../store/themeConfigSlice';
 import { useDispatch } from 'react-redux';
-// import { MultiDrag } from 'sortablejs';
-// import Sortable from 'sortablejs';
 
-const items1 = [
-    {
-        id: 1,
-        text: 'Need to be approved',
-        name: 'Kelly Young',
-    },
-    {
-        id: 2,
-        text: 'Meeting with client',
-        name: 'Andy King',
-    },
-    {
-        id: 3,
-        text: 'Project Detail',
-        name: 'Judy Holmes',
-    },
-    {
-        id: 4,
-        text: 'Edited Post Apporval',
-        name: 'Vincent Carpenter',
-    },
-    {
-        id: 5,
-        text: 'Project Lead Pickup',
-        name: 'Mary McDonald',
-    },
-];
-const items2 = [
-    {
-        id: 6,
-        text: 'Need to be approved',
-        name: 'Kelly Young',
-    },
-    {
-        id: 7,
-        text: 'Meeting with client',
-        name: 'Andy King',
-    },
-    {
-        id: 8,
-        text: 'Project Detail',
-        name: 'Judy Holmes',
-    },
-    {
-        id: 9,
-        text: 'Edited Post Apporval',
-        name: 'Vincent Carpenter',
-    },
-    {
-        id: 10,
-        text: 'Project Lead Pickup',
-        name: 'Mary McDonald',
-    },
-];
-const items3 = [
-    {
-        id: 2,
-        text: 'Meeting with client',
-        name: 'Andy King',
-    },
-    {
-        id: 1,
-        text: 'Need to be approved',
-        name: 'Kelly Young',
-    },
-    {
-        id: 3,
-        text: 'Project Detail',
-        name: 'Judy Holmes',
-    },
-    {
-        id: 4,
-        text: 'Edited Post Apporval',
-        name: 'Vincent Carpenter',
-    },
-];
-const items4 = [
-    { id: 1, name: 'Item 1' },
-    { id: 2, name: 'Item 2' },
-    { id: 3, name: 'Item 3' },
-    { id: 4, name: 'Item 4' },
-    { id: 5, name: 'Item 5' },
-    { id: 6, name: 'Item 6' },
-    { id: 7, name: 'Item 7' },
-    { id: 8, name: 'Item 8' },
-    { id: 9, name: 'Item 9' },
-    { id: 10, name: 'Item 10' },
-    { id: 11, name: 'Item 11' },
-    { id: 12, name: 'Item 12' },
-];
+const sampleData = [{
+    "name": "Desktop",
+    "type": "folder",
+    "children": [
+        { "name": "Back", "type": "back", "children": [] },
+        {
+            "name": "Jay",
+            "type": "folder",
+            "children": [
+                {
+                    "name": "Back", "type": "back", "children": [
+                        { "name": "Back", "type": "back", "children": [] },
+                    ]
+                },
+                {
+                    "name": "Laravel Projects", "type": "folder", "children": [
+                        { "name": "Back", "type": "back", "children": [] }
+                    ]
+                },
+                {
+                    "name": "Node Projects", "type": "folder", "children": [
+                        { "name": "Back", "type": "back", "children": [] }
+                    ]
+                },
+                {
+                    "name": "Python Projects", "type": "folder", "children": [
+                        { "name": "Back", "type": "back", "children": [] }
+                    ]
+                },
+                {
+                    "name": "React Projects", "type": "folder", "children": [
+                        { "name": "Back", "type": "back", "children": [] }
+                    ]
+                },
+                {
+                    "name": "Shopify Themes", "type": "folder", "children": [
+                        { "name": "Back", "type": "back", "children": [] }
+                    ]
+                },
+                {
+                    "name": "temp", "type": "folder", "children": [
+                        { "name": "Back", "type": "back", "children": [] }
+                    ]
+                }
+            ]
+        },
+        { "name": "Node Projects", "type": "folder", "children": [{ "name": "Back", "type": "back", "children": [] }] },
+        { "name": "React Projects", "type": "folder", "children": [{ "name": "Back", "type": "back", "children": [] }] },
+        { "name": "index.html", "type": "file" },
+        { "name": "snapmint.json", "type": "file" },
+        { "name": "test.html", "type": "file" }
+    ]
+}];
+
+const Item = ({ name, type, history }) => {
+    return (
+        <center>
+            <div>
+                {
+                    (type == "back") ? (
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 h-16 text-danger inline ltr:mr-2 rtl:ml-2">
+                            <path opacity="0.6" d="M15 2H14C11.1716 2 9.75736 2 8.87868 2.87868C8 3.75736 8 5.17157 8 8V16C8 18.8284 8 20.2426 8.87868 21.1213C9.75736 22 11.1716 22 14 22H15C17.8284 22 19.2426 22 20.1213 21.1213C21 20.2426 21 18.8284 21 16V8C21 5.17157 21 3.75736 20.1213 2.87868C19.2426 2 17.8284 2 15 2Z" fill="currentColor" />
+                            <path opacity="0.4" d="M8 8C8 6.46249 8 5.34287 8.14114 4.5H8C5.64298 4.5 4.46447 4.5 3.73223 5.23223C3 5.96447 3 7.14298 3 9.5V14.5C3 16.857 3 18.0355 3.73223 18.7678C4.46447 19.5 5.64298 19.5 8 19.5H8.14114C8 18.6571 8 17.5375 8 16V12.75V11.25V8Z" fill="currentColor" />
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M4.46967 11.4697C4.17678 11.7626 4.17678 12.2374 4.46967 12.5303L6.46967 14.5303C6.76256 14.8232 7.23744 14.8232 7.53033 14.5303C7.82322 14.2374 7.82322 13.7626 7.53033 13.4697L6.81066 12.75L14 12.75C14.4142 12.75 14.75 12.4142 14.75 12C14.75 11.5858 14.4142 11.25 14 11.25L6.81066 11.25L7.53033 10.5303C7.82322 10.2374 7.82322 9.76256 7.53033 9.46967C7.23744 9.17678 6.76256 9.17678 6.46967 9.46967L4.46967 11.4697Z" fill="currentColor" />
+                        </svg>
+                    ) : (
+                        (type == 'folder') ? (
+                            <svg
+                                width="48"
+                                height="48"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="w-12 h-12 text-primary inline relative -top-1 ltr:mr-2 rtl:ml-2"
+                            >
+                                <path opacity="0.5" d="M18 10L13 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                <path
+                                    d="M2 6.94975C2 6.06722 2 5.62595 2.06935 5.25839C2.37464 3.64031 3.64031 2.37464 5.25839 2.06935C5.62595 2 6.06722 2 6.94975 2C7.33642 2 7.52976 2 7.71557 2.01738C8.51665 2.09229 9.27652 2.40704 9.89594 2.92051C10.0396 3.03961 10.1763 3.17633 10.4497 3.44975L11 4C11.8158 4.81578 12.2237 5.22367 12.7121 5.49543C12.9804 5.64471 13.2651 5.7626 13.5604 5.84678C14.0979 6 14.6747 6 15.8284 6H16.2021C18.8345 6 20.1506 6 21.0062 6.76946C21.0849 6.84024 21.1598 6.91514 21.2305 6.99383C22 7.84935 22 9.16554 22 11.7979V14C22 17.7712 22 19.6569 20.8284 20.8284C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.8284C2 19.6569 2 17.7712 2 14V6.94975Z"
+                                    stroke="currentColor"
+                                    strokeWidth="1.5"
+                                />
+                            </svg>
+                        ) : (
+                            <>
+                                {/* File */}
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 h-16 text-primary inline ltr:mr-2 rtl:ml-2">
+                                    <path
+                                        d="M15.3929 4.05365L14.8912 4.61112L15.3929 4.05365ZM19.3517 7.61654L18.85 8.17402L19.3517 7.61654ZM21.654 10.1541L20.9689 10.4592V10.4592L21.654 10.1541ZM3.17157 20.8284L3.7019 20.2981H3.7019L3.17157 20.8284ZM20.8284 20.8284L20.2981 20.2981L20.2981 20.2981L20.8284 20.8284ZM14 21.25H10V22.75H14V21.25ZM2.75 14V10H1.25V14H2.75ZM21.25 13.5629V14H22.75V13.5629H21.25ZM14.8912 4.61112L18.85 8.17402L19.8534 7.05907L15.8947 3.49618L14.8912 4.61112ZM22.75 13.5629C22.75 11.8745 22.7651 10.8055 22.3391 9.84897L20.9689 10.4592C21.2349 11.0565 21.25 11.742 21.25 13.5629H22.75ZM18.85 8.17402C20.2034 9.3921 20.7029 9.86199 20.9689 10.4592L22.3391 9.84897C21.9131 8.89241 21.1084 8.18853 19.8534 7.05907L18.85 8.17402ZM10.0298 2.75C11.6116 2.75 12.2085 2.76158 12.7405 2.96573L13.2779 1.5653C12.4261 1.23842 11.498 1.25 10.0298 1.25V2.75ZM15.8947 3.49618C14.8087 2.51878 14.1297 1.89214 13.2779 1.5653L12.7405 2.96573C13.2727 3.16993 13.7215 3.55836 14.8912 4.61112L15.8947 3.49618ZM10 21.25C8.09318 21.25 6.73851 21.2484 5.71085 21.1102C4.70476 20.975 4.12511 20.7213 3.7019 20.2981L2.64124 21.3588C3.38961 22.1071 4.33855 22.4392 5.51098 22.5969C6.66182 22.7516 8.13558 22.75 10 22.75V21.25ZM1.25 14C1.25 15.8644 1.24841 17.3382 1.40313 18.489C1.56076 19.6614 1.89288 20.6104 2.64124 21.3588L3.7019 20.2981C3.27869 19.8749 3.02502 19.2952 2.88976 18.2892C2.75159 17.2615 2.75 15.9068 2.75 14H1.25ZM14 22.75C15.8644 22.75 17.3382 22.7516 18.489 22.5969C19.6614 22.4392 20.6104 22.1071 21.3588 21.3588L20.2981 20.2981C19.8749 20.7213 19.2952 20.975 18.2892 21.1102C17.2615 21.2484 15.9068 21.25 14 21.25V22.75ZM21.25 14C21.25 15.9068 21.2484 17.2615 21.1102 18.2892C20.975 19.2952 20.7213 19.8749 20.2981 20.2981L21.3588 21.3588C22.1071 20.6104 22.4392 19.6614 22.5969 18.489C22.7516 17.3382 22.75 15.8644 22.75 14H21.25ZM2.75 10C2.75 8.09318 2.75159 6.73851 2.88976 5.71085C3.02502 4.70476 3.27869 4.12511 3.7019 3.7019L2.64124 2.64124C1.89288 3.38961 1.56076 4.33855 1.40313 5.51098C1.24841 6.66182 1.25 8.13558 1.25 10H2.75ZM10.0298 1.25C8.15538 1.25 6.67442 1.24842 5.51887 1.40307C4.34232 1.56054 3.39019 1.8923 2.64124 2.64124L3.7019 3.7019C4.12453 3.27928 4.70596 3.02525 5.71785 2.88982C6.75075 2.75158 8.11311 2.75 10.0298 2.75V1.25Z"
+                                        fill="currentColor"
+                                    />
+                                    <path opacity="0.5" d="M6 14.5H14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                    <path opacity="0.5" d="M6 18H11.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                    <path opacity="0.5" d="M13 2.5V5C13 7.35702 13 8.53553 13.7322 9.26777C14.4645 10 15.643 10 18 10H22" stroke="currentColor" strokeWidth="1.5" />
+                                </svg>
+                            </>
+                        )
+                    )
+                }
+                <br />
+                <strong>{name}</strong>
+            </div>
+        </center >
+    );
+}
 
 const DragAndDrop = () => {
     const dispatch = useDispatch();
     useEffect(() => {
         dispatch(setPageTitle('Drag & Drop'));
     });
-    // ReactSortable.mount(new MultiDrag());
+    const [gridDrag, setGridDrag] = useState(sampleData);
+    const [history, setHistory] = useState([]);
 
-    const [sortable1, setSortable1] = useState(items1);
-    const [sortable2, setSortable2] = useState(items2);
-    const [iconChange1, setIconChange1] = useState(items1);
-    const [iconChange2, setIconChange2] = useState(items2);
-    const [handler1, setHandler1] = useState(items1);
-    const [handler2, setHandler2] = useState(items2);
-    // const [multipleDrag1, setMultipleDrag1] = useState(items1);
-    // const [multipleDrag2, setMultipleDrag2] = useState(items2);
-    const [newsFeed, setNewsFeed] = useState(items3);
-    const [delete1, setDelete1] = useState(items1);
-    const [delete2, setDelete2] = useState(items2);
-    const [gridDrag, setGridDrag] = useState(items4);
-    const [swap, setSwap] = useState([...items1, ...items2]);
+    const selectItem = (index) => {
+        const selectedItem = gridDrag[index];
+
+        if (selectedItem.type === "folder") {
+            setHistory([...history, gridDrag]); // Store the current state before navigating
+            setGridDrag(selectedItem.children);
+        } else if (selectedItem.type === "back" && history.length > 0) {
+            setGridDrag(history[history.length - 1]); // Go back to previous state
+            setHistory(history.slice(0, -1)); // Remove last entry from history
+        }
+    };
 
     return (
         <div>
@@ -132,499 +143,23 @@ const DragAndDrop = () => {
             </ul>
 
             <div className="dragndrop space-y-8">
-                <div className="panel p-3 flex items-center text-primary overflow-x-auto whitespace-nowrap">
-                    <div className="ring-2 ring-primary/30 rounded-full bg-primary text-white p-1.5 ltr:mr-3 rtl:ml-3">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path
-                                d="M19.0001 9.7041V9C19.0001 5.13401 15.8661 2 12.0001 2C8.13407 2 5.00006 5.13401 5.00006 9V9.7041C5.00006 10.5491 4.74995 11.3752 4.28123 12.0783L3.13263 13.8012C2.08349 15.3749 2.88442 17.5139 4.70913 18.0116C9.48258 19.3134 14.5175 19.3134 19.291 18.0116C21.1157 17.5139 21.9166 15.3749 20.8675 13.8012L19.7189 12.0783C19.2502 11.3752 19.0001 10.5491 19.0001 9.7041Z"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                            />
-                            <path opacity="0.5" d="M7.5 19C8.15503 20.7478 9.92246 22 12 22C14.0775 22 15.845 20.7478 16.5 19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                        </svg>
-                    </div>
-                    <span className="ltr:mr-3 rtl:ml-3">Documentation: </span>
-                    <a href="https://www.npmjs.com/package/react-sortablejs" target="_blank" className="block hover:underline" rel="noreferrer">
-                        https://www.npmjs.com/package/react-sortablejs
-                    </a>
-                </div>
-                {/* Sortable */}
-                <div className="panel">
-                    <div className="font-semibold text-lg mb-5">Sortable</div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12">
-                        <div>
-                            <ul id="example1">
-                                <ReactSortable list={sortable1} setList={setSortable1} animation={200} delay={2} ghostClass="gu-transit" group="shared">
-                                    {sortable1.map((item) => {
-                                        return (
-                                            <li key={item.id} className="mb-2.5 cursor-grab">
-                                                <div className="bg-white dark:bg-[#1b2e4b] rounded-md border border-white-light dark:border-dark px-6 py-3.5 flex md:flex-row flex-col ltr:md:text-left rtl:md:text-right text-center items-md-center">
-                                                    <div className="ltr:sm:mr-4 rtl:sm:ml-4">
-                                                        <img alt="avatar" src={`/assets/images/profile-${item.id}.jpeg`} className="w-11 h-11 rounded-full mx-auto" />
-                                                    </div>
-                                                    <div className="flex md:flex-row flex-col justify-between items-center flex-1">
-                                                        <div className="font-semibold md:my-0 my-3">
-                                                            <div className="text-dark dark:text-[#bfc9d4] text-base">{item.text}</div>
-                                                            <div className="text-white-dark text-xs">{item.name}</div>
-                                                        </div>
-                                                        <div>
-                                                            <button type="button" className="btn btn-secondary btn-sm px-5 py-2">
-                                                                View
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                        );
-                                    })}
-                                </ReactSortable>
-                            </ul>
-                        </div>
-                        <div>
-                            <ul id="example2">
-                                <ReactSortable list={sortable2} setList={setSortable2} animation={200} delay={2} ghostClass="gu-transit" group="shared">
-                                    {sortable2.map((item) => {
-                                        return (
-                                            <li key={item.id} className="mb-2.5 cursor-grab">
-                                                <div className="bg-white dark:bg-[#1b2e4b] rounded-md border border-white-light dark:border-dark px-6 py-3.5 flex md:flex-row flex-col ltr:md:text-left rtl:md:text-right text-center items-md-center">
-                                                    <div className="ltr:sm:mr-4 rtl:sm:ml-4">
-                                                        <img alt="avatar" src={`/assets/images/profile-${item.id}.jpeg`} className="w-11 h-11 rounded-full mx-auto" />
-                                                    </div>
-                                                    <div className="flex md:flex-row flex-col justify-between items-center flex-1">
-                                                        <div className="font-semibold md:my-0 my-3">
-                                                            <div className="text-dark dark:text-[#bfc9d4] text-base">{item.text}</div>
-                                                            <div className="text-white-dark text-xs">{item.name}</div>
-                                                        </div>
-                                                        <div>
-                                                            <button type="button" className="btn btn-secondary btn-sm px-5 py-2">
-                                                                View
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                        );
-                                    })}
-                                </ReactSortable>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                {/* Icon change */}
-                <div className="panel">
-                    <div className="font-semibold text-lg dark:text-white mb-5">Icon Change</div>
-                    <div className="icon-change grid grid-cols-1 sm:grid-cols-2 gap-x-12">
-                        <div>
-                            <ul id="example3" className="left">
-                                <ReactSortable list={iconChange1} setList={setIconChange1} animation={200} ghostClass="gu-transit" group="icon">
-                                    {iconChange1.map((item) => {
-                                        return (
-                                            <li key={item.id} className="mb-2.5 cursor-grab">
-                                                <div className="bg-white dark:bg-[#1b2e4b] rounded-md border border-white-light dark:border-dark px-6 py-3.5 flex md:flex-row flex-col ltr:text-left rtl:text-right items-md-center">
-                                                    <div className="ltr:sm:mr-4 rtl:sm:ml-4">
-                                                        <img alt="avatar" src={`/assets/images/profile-${item.id}.jpeg`} className="w-11 h-11 rounded-full" />
-                                                    </div>
-                                                    <div className="flex justify-between items-center flex-1">
-                                                        <div className="font-semibold md:my-0 my-3">
-                                                            <div className="text-dark dark:text-[#bfc9d4] text-base">{item.text}</div>
-                                                            <div className="text-white-dark text-xs">{item.name}</div>
-                                                        </div>
-                                                        <div className="text-white-dark">
-                                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                <path
-                                                                    d="M9.15316 5.40838C10.4198 3.13613 11.0531 2 12 2C12.9469 2 13.5802 3.13612 14.8468 5.40837L15.1745 5.99623C15.5345 6.64193 15.7144 6.96479 15.9951 7.17781C16.2757 7.39083 16.6251 7.4699 17.3241 7.62805L17.9605 7.77203C20.4201 8.32856 21.65 8.60682 21.9426 9.54773C22.2352 10.4886 21.3968 11.4691 19.7199 13.4299L19.2861 13.9372C18.8096 14.4944 18.5713 14.773 18.4641 15.1177C18.357 15.4624 18.393 15.8341 18.465 16.5776L18.5306 17.2544C18.7841 19.8706 18.9109 21.1787 18.1449 21.7602C17.3788 22.3417 16.2273 21.8115 13.9243 20.7512L13.3285 20.4768C12.6741 20.1755 12.3469 20.0248 12 20.0248C11.6531 20.0248 11.3259 20.1755 10.6715 20.4768L10.0757 20.7512C7.77268 21.8115 6.62118 22.3417 5.85515 21.7602C5.08912 21.1787 5.21588 19.8706 5.4694 17.2544L5.53498 16.5776C5.60703 15.8341 5.64305 15.4624 5.53586 15.1177C5.42868 14.773 5.19043 14.4944 4.71392 13.9372L4.2801 13.4299C2.60325 11.4691 1.76482 10.4886 2.05742 9.54773C2.35002 8.60682 3.57986 8.32856 6.03954 7.77203L6.67589 7.62805C7.37485 7.4699 7.72433 7.39083 8.00494 7.17781C8.28555 6.96479 8.46553 6.64194 8.82547 5.99623L9.15316 5.40838Z"
-                                                                    stroke="currentColor"
-                                                                    strokeWidth="1.5"
-                                                                />
-                                                            </svg>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                        );
-                                    })}
-                                </ReactSortable>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <ul id="example4" className="right">
-                                <ReactSortable list={iconChange2} setList={setIconChange2} animation={200} ghostClass="gu-transit" group="icon">
-                                    {iconChange2.map((item) => {
-                                        return (
-                                            <li key={item.id} className="mb-2.5 cursor-grab">
-                                                <div className="bg-white dark:bg-[#1b2e4b] rounded-md border border-white-light dark:border-dark px-6 py-3.5 flex md:flex-row flex-col ltr:text-left rtl:text-right items-md-center">
-                                                    <div className="ltr:sm:mr-4 rtl:sm:ml-4">
-                                                        <img alt="avatar" src={`/assets/images/profile-${item.id}.jpeg`} className="w-11 h-11 rounded-full" />
-                                                    </div>
-                                                    <div className="flex justify-between items-center flex-1">
-                                                        <div className="font-semibold md:my-0 my-3">
-                                                            <div className="text-dark dark:text-[#bfc9d4] text-base">{item.text}</div>
-                                                            <div className="text-white-dark text-xs">{item.name}</div>
-                                                        </div>
-                                                        <div className="text-white-dark">
-                                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-6 h-6">
-                                                                <path
-                                                                    d="M12 5.50063C7.50016 0.825464 2 4.27416 2 9.1371C2 14 6.01943 16.5914 8.96173 18.9109C10 19.7294 11 20.5 12 20.5"
-                                                                    stroke="currentColor"
-                                                                    strokeWidth="1.5"
-                                                                    strokeLinecap="round"
-                                                                />
-                                                                <path
-                                                                    opacity="0.5"
-                                                                    d="M12 5.50063C16.4998 0.825464 22 4.27416 22 9.1371C22 14 17.9806 16.5914 15.0383 18.9109C14 19.7294 13 20.5 12 20.5"
-                                                                    stroke="currentColor"
-                                                                    strokeWidth="1.5"
-                                                                    strokeLinecap="round"
-                                                                />
-                                                            </svg>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                        );
-                                    })}
-                                </ReactSortable>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                {/* Handler */}
-                <div className="panel">
-                    <div className="font-semibold text-lg dark:text-white mb-5">Handler</div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12">
-                        <div>
-                            <ul id="example5">
-                                <ReactSortable list={handler1} setList={setHandler1} animation={200} handle=".handle" group="handler" ghostClass="gu-transit">
-                                    {handler1.map((item) => {
-                                        return (
-                                            <li key={item.id} className="mb-2.5 cursor-grab">
-                                                <div className="bg-white dark:bg-[#1b2e4b] rounded-md border border-white-light dark:border-dark px-6 py-3.5 flex md:flex-row flex-col ltr:text-left rtl:text-right items-md-center">
-                                                    <div className="ltr:sm:mr-4 rtl:sm:ml-4">
-                                                        <img alt="avatar" src={`/assets/images/profile-${item.id}.jpeg`} className="w-11 h-11 rounded-full mx-auto" />
-                                                    </div>
-                                                    <div className="flex md:flex-row flex-col justify-between items-center flex-1 text-center md:text-left">
-                                                        <div className="font-semibold md:my-0 my-3">
-                                                            <div className="text-dark dark:text-[#bfc9d4] text-base">{item.text}</div>
-                                                            <div className="text-white-dark text-xs">{item.name}</div>
-                                                        </div>
-                                                        <div className="text-white-dark">
-                                                            <span className="handle px-2 ltr:mr-1 rtl:ml-1 bg-[#ebedf2] dark:bg-black rounded cursor-move">+</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                        );
-                                    })}
-                                </ReactSortable>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <ul id="example6">
-                                <ReactSortable list={handler2} setList={setHandler2} animation={200} handle=".handle" group="handler" ghostClass="gu-transit">
-                                    {handler2.map((item) => {
-                                        return (
-                                            <li key={item.id} className="mb-2.5 cursor-grab">
-                                                <div className="bg-white dark:bg-[#1b2e4b] rounded-md border border-white-light dark:border-dark px-6 py-3.5 flex md:flex-row flex-col ltr:text-left rtl:text-right items-md-center">
-                                                    <div className="ltr:sm:mr-4 rtl:sm:ml-4">
-                                                        <img alt="avatar" src={`/assets/images/profile-${item.id}.jpeg`} className="w-11 h-11 rounded-full mx-auto" />
-                                                    </div>
-                                                    <div className="sm:flex block justify-between items-center flex-1 text-center md:text-left">
-                                                        <div className="font-semibold md:my-0 my-3">
-                                                            <div className="text-dark dark:text-[#bfc9d4] text-base">{item.text}</div>
-                                                            <div className="text-white-dark text-xs">{item.name}</div>
-                                                        </div>
-                                                        <div className="text-white-dark">
-                                                            <span className="handle px-2 ltr:mr-1 rtl:ml-1 bg-[#ebedf2] dark:bg-black rounded cursor-move">+</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                        );
-                                    })}
-                                </ReactSortable>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                {/* Multiple drag */}
-                {/* <div className="panel">
-                <div className="font-semibold text-lg dark:text-white mb-5">Multiple Drag</div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12">
-                    <div>
-                        <ul id="example7">
-                            <ReactSortable
-                                list={multipleDrag1}
-                                setList={setMultipleDrag1}
-                                animation={200}
-                                group="multiple"
-                                multiDrag={true}
-                                selectedClass="selected"
-                                fallbackTolerance={3}
-                                ghostClass="gu-transit"
-
-                            >
-                                {multipleDrag1.map((item) => {
-                                    return (
-                                        <div key={item.id}>
-                                            <li className="mb-2.5 cursor-grab">
-                                                <div className="bg-white dark:bg-[#1b2e4b] rounded-md border border-white-light dark:border-dark px-6 py-3.5 flex md:flex-row flex-col ltr:text-left rtl:text-right items-md-center">
-                                                    <div className="ltr:sm:mr-4 rtl:sm:ml-4">
-                                                        <img
-                                                            alt="avatar"
-                                                            src={`/assets/images/profile-${item.id}.jpeg`}
-                                                            className="w-11 h-11 rounded-full mx-auto"
-                                                        />
-                                                    </div>
-                                                    <div className="flex justify-between items-center flex-1">
-                                                        <div className="font-semibold md:my-0 my-3">
-                                                            <div className="text-dark dark:text-[#bfc9d4] text-base">
-                                                                {item.text}
-                                                            </div>
-                                                            <div className="text-white-dark text-xs">{item.name}</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                        </div>
-                                    );
-                                })}
-                            </ReactSortable>
-                        </ul>
-                    </div>
-
-                    <div>
-                        <ul id="example8">
-                            <ReactSortable
-                                list={multipleDrag2}
-                                setList={setMultipleDrag2}
-                                animation={200}
-                                group="multiple"
-                                multiDrag={true}
-                                selectedClass="selected"
-                                fallbackTolerance={3}
-                                ghostClass="gu-transit"
-
-                            >
-                                {multipleDrag2.map((item) => {
-                                    return (
-                                        <div key={item.id}>
-                                            <li className="mb-2.5 cursor-grab">
-                                                <div className="bg-white dark:bg-[#1b2e4b] rounded-md border border-white-light dark:border-dark px-6 py-3.5 flex md:flex-row flex-col ltr:text-left rtl:text-right items-md-center">
-                                                    <div className="ltr:sm:mr-4 rtl:sm:ml-4">
-                                                        <img
-                                                            alt="avatar"
-                                                            src={`/assets/images/profile-${item.id}.jpeg`}
-                                                            className="w-11 h-11 rounded-full mx-auto"
-                                                        />
-                                                    </div>
-                                                    <div className="flex justify-between items-center flex-1">
-                                                        <div className="font-semibold md:my-0 my-3">
-                                                            <div className="text-dark dark:text-[#bfc9d4] text-base">
-                                                                {item.text}
-                                                            </div>
-                                                            <div className="text-white-dark text-xs">{item.name}</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                        </div>
-                                    );
-                                })}
-                            </ReactSortable>
-                        </ul>
-                    </div>
-                </div>
-            </div>  */}
-
-                {/* News Feed */}
-                <div className="panel">
-                    <div className="font-semibold text-lg dark:text-white mb-5">News Feed</div>
-                    <div>
-                        <div id="example12">
-                            <ReactSortable list={newsFeed} setList={setNewsFeed} animation={200} className="grid grid-cols-1 sm:grid-cols-2 gap-x-12">
-                                {newsFeed.map((item) => {
-                                    return (
-                                        <div className="mb-2.5" key={item.id}>
-                                            <div className="bg-white dark:bg-[#1b2e4b] rounded-md border border-white-light dark:border-dark px-6 py-3.5">
-                                                <div className="py-sm-2.5 sm:flex block ltr:md:text-left rtl:md:text-right text-center items-md-center">
-                                                    <div className="ltr:sm:mr-4 rtl:sm:ml-4">
-                                                        <img alt="avatar" src={`/assets/images/profile-${item.id + 1}.jpeg`} className="w-11 h-11 rounded-lg mx-auto" />
-                                                    </div>
-                                                    <div className="flex md:flex-row flex-col justify-between items-center flex-1">
-                                                        <div className="font-semibold md:my-0 my-3">
-                                                            <div className="text-dark dark:text-[#bfc9d4] text-base">{item.name}</div>
-                                                            <div className="text-white-dark text-xs">11 hours ago</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="py-5 border-b border-b-[#f1f2f3] dark:border-b-dark mb-4">
-                                                    Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
-                                                    veniam, quis nostrud exercitation.
-                                                </div>
-                                                <div className="md:flex items-center flex-wrap">
-                                                    <div className="ltr:md:text-left rtl:md:text-right text-center xl:flex-1">
-                                                        <div className="flex md:justify-start justify-center -space-x-2 rtl:space-x-reverse text-white">
-                                                            <img
-                                                                className="w-10 h-10 rounded-full object-cover ring-2 ring-white dark:ring-white-dark"
-                                                                src="/assets/images/profile-6.jpeg"
-                                                                alt="avatar"
-                                                            />
-                                                            <img
-                                                                className="w-10 h-10 rounded-full object-cover ring-2 ring-white dark:ring-white-dark"
-                                                                src="/assets/images/profile-7.jpeg"
-                                                                alt="avatar"
-                                                            />
-                                                            <img
-                                                                className="w-10 h-10 rounded-full object-cover ring-2 ring-white dark:ring-white-dark"
-                                                                src="/assets/images/profile-8.jpeg"
-                                                                alt="avatar"
-                                                            />
-                                                            <img
-                                                                className="w-10 h-10 rounded-full object-cover ring-2 ring-white dark:ring-white-dark"
-                                                                src="/assets/images/profile-10.jpeg"
-                                                                alt="avatar"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    <div className="ltr:md:text-right rtl:md:text-left text-center">
-                                                        <span className="text-xs text-white-dark lg:pt-0 pt-2 block">
-                                                            <button className="text-danger dark:text-primary font-semibold text-sm mr-1">Vincent, Mary</button>
-                                                            and 19 other like this
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </ReactSortable>
-                        </div>
-                    </div>
-                </div>
-                {/* Delete */}
-                <div className="panel">
-                    <div className="font-semibold text-lg dark:text-white mb-5">Delete User</div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12">
-                        <div>
-                            <ul id="example7">
-                                <ReactSortable
-                                    list={delete1}
-                                    setList={setDelete1}
-                                    animation={200}
-                                    group="delete"
-                                    removeOnSpill={true}
-                                    //
-                                    onSpill={(evt) => {
-                                        const toRemoved = delete1[evt.oldIndex as number];
-                                        setDelete1(delete1.filter((item) => item !== toRemoved));
-                                    }}
-                                    className="min-h-[200px]"
-                                >
-                                    {delete1.map((item) => {
-                                        return (
-                                            <li key={item.id} className="mb-2.5 cursor-grab">
-                                                <div className="bg-white dark:bg-[#1b2e4b] rounded-md border border-white-light dark:border-dark px-6 py-3.5 flex md:flex-row flex-col ltr:text-left rtl:text-right items-md-center">
-                                                    <div className="ltr:sm:mr-4 rtl:sm:ml-4">
-                                                        <img alt="avatar" src={`/assets/images/profile-${item.id}.jpeg`} className="w-11 h-11 rounded-full mx-auto" />
-                                                    </div>
-                                                    <div className="flex md:flex-row flex-col justify-between items-center flex-1 text-center md:text-left">
-                                                        <div className="font-semibold md:my-0 my-3">
-                                                            <div className="text-dark dark:text-[#bfc9d4] text-base">{item.text}</div>
-                                                            <div className="text-white-dark text-xs">{item.name}</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                        );
-                                    })}
-                                </ReactSortable>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <ul id="example8">
-                                <ReactSortable
-                                    list={delete2}
-                                    setList={setDelete2}
-                                    animation={200}
-                                    group="delete"
-                                    removeOnSpill={true}
-                                    onSpill={(evt) => {
-                                        const toRemoved = delete2[evt.oldIndex as number];
-                                        setDelete2(delete2.filter((item) => item !== toRemoved));
-                                    }}
-                                    className="min-h-[200px]"
-                                >
-                                    {delete2.map((item) => {
-                                        return (
-                                            <li key={item.id} className="mb-2.5 cursor-grab">
-                                                <div className="bg-white dark:bg-[#1b2e4b] rounded-md border border-white-light dark:border-dark px-6 py-3.5 flex md:flex-row flex-col ltr:text-left rtl:text-right items-md-center">
-                                                    <div className="ltr:sm:mr-4 rtl:sm:ml-4">
-                                                        <img alt="avatar" src={`/assets/images/profile-${item.id}.jpeg`} className="w-11 h-11 rounded-full mx-auto" />
-                                                    </div>
-                                                    <div className="flex md:flex-row flex-col justify-between items-center flex-1 text-center md:text-left">
-                                                        <div className="font-semibold md:my-0 my-3">
-                                                            <div className="text-dark dark:text-[#bfc9d4] text-base">{item.text}</div>
-                                                            <div className="text-white-dark text-xs">{item.name}</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                        );
-                                    })}
-                                </ReactSortable>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                {/* Grid drag */}
                 <div className="dragndrop space-y-8">
                     <div className="panel">
                         <div className="font-semibold text-lg dark:text-white mb-5">Grid drag</div>
                         <div id="example11">
                             <ReactSortable list={gridDrag} setList={setGridDrag} animation={200} className="grid grid-cols-2 xs sm:grid-cols-4 md:grid-cols-8 gap-8 place-items-center">
-                                {gridDrag.map((item) => {
+                                {gridDrag.map((item, index) => {
                                     return (
                                         <div
-                                            key={item.id}
-                                            className="w-24 h-24 border border-white-light rounded-md shadow dark:border-dark flex items-center justify-center font-semibold cursor-grab"
+                                            key={index}
+                                            className="w-24 h-24 rounded-md shadow dark:border-dark flex items-center justify-center font-semibold cursor-grab"
+                                            onClick={() => selectItem(index)}
                                         >
-                                            {item.name}
+                                            <Item name={item.name} type={item.type} history={gridDrag} />
                                         </div>
                                     );
                                 })}
                             </ReactSortable>
-                        </div>
-                    </div>
-                </div>
-                {/* Swap */}
-                <div className="panel">
-                    <div className="font-semibold text-lg dark:text-white mb-5">Swap</div>
-                    <div>
-                        <div>
-                            <ul id="example7">
-                                <ReactSortable list={swap} setList={setSwap} animation={200} swap={true} swapThreshold={1} className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-2.5">
-                                    {swap.map((item) => {
-                                        return (
-                                            <li key={item.id} className=" cursor-grab">
-                                                <div className="bg-white dark:bg-[#1b2e4b] rounded-md border border-white-light dark:border-dark px-6 py-3.5 flex md:flex-row flex-col ltr:text-left rtl:text-right items-md-center">
-                                                    <div className="ltr:sm:mr-4 rtl:sm:ml-4">
-                                                        <img alt="avatar" src={`/assets/images/profile-${item.id}.jpeg`} className="w-11 h-11 rounded-full mx-auto" />
-                                                    </div>
-                                                    <div className="flex md:flex-row flex-col justify-between items-center flex-1 text-center md:text-left">
-                                                        <div className="font-semibold md:my-0 my-3">
-                                                            <div className="text-dark dark:text-[#bfc9d4] text-base">{item.text}</div>
-                                                            <div className="text-white-dark text-xs">{item.name}</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                        );
-                                    })}
-                                </ReactSortable>
-                            </ul>
                         </div>
                     </div>
                 </div>
