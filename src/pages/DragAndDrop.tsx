@@ -58,7 +58,7 @@ const sampleData = [{
     ]
 }];
 
-const Item = ({ name, type, history }) => {
+const Item = ({ name, type }) => {
     return (
         <center>
             <div>
@@ -138,14 +138,14 @@ const DragAndDrop = () => {
                     </Link>
                 </li>
                 <li className="before:content-['/'] ltr:before:mr-2 rtl:before:ml-2">
-                    <span>Drag & Drop</span>
+                    <span>NAS - Jay Chauhan</span>
                 </li>
             </ul>
 
             <div className="dragndrop space-y-8">
                 <div className="dragndrop space-y-8">
                     <div className="panel">
-                        <div className="font-semibold text-lg dark:text-white mb-5">Grid drag</div>
+                        <div className="font-semibold text-lg dark:text-white mb-5">Primary</div>
                         <div id="example11">
                             <ReactSortable list={gridDrag} setList={setGridDrag} animation={200} className="grid grid-cols-2 xs sm:grid-cols-4 md:grid-cols-8 gap-8 place-items-center">
                                 {gridDrag.map((item, index) => {
