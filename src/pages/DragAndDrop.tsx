@@ -3,7 +3,13 @@ import { useEffect, useState } from 'react';
 import { ReactSortable } from 'react-sortablejs';
 import { setPageTitle } from '../store/themeConfigSlice';
 import { useDispatch } from 'react-redux';
+import { postRequest } from '../utils/Request';
+import Swal from 'sweetalert2';
 
+const headers = {
+    "Content-Type": "multipart/form-data",
+    "authorization": "Bearer " + localStorage.getItem("accessToken")
+};
 const sampleData = [{
     "name": "Desktop",
     "type": "folder",
@@ -129,6 +135,34 @@ const DragAndDrop = () => {
         }
     };
 
+    const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        const files = event.dataTransfer.files;
+        if (files.length > 0) {
+            uploadFiles(files);
+        }
+    };
+
+    const uploadFiles = async (files: FileList) => {
+        const toast = Swal.mixin({
+            toast: true,
+            position: 'top',
+            showConfirmButton: false,
+            timer: 3000,
+        });
+        const formData = new FormData();
+        for (let i = 0; i < files.length; i++) {
+            formData.append("file", files[i]); // Adjust "file" to match your API field name
+        }
+
+        const response = await postRequest("/v1/nas/uploadFile", formData, {}, headers);
+        toast.fire({
+            icon: response.type,
+            title: response.message,
+            padding: '10px 20px',
+        });
+    };
+
     return (
         <div>
             <ul className="flex space-x-2 rtl:space-x-reverse mb-6">
@@ -146,7 +180,10 @@ const DragAndDrop = () => {
                 <div className="dragndrop space-y-8">
                     <div className="panel">
                         <div className="font-semibold text-lg dark:text-white mb-5">Primary</div>
-                        <div id="example11">
+                        <div
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={handleDrop}
+                        >
                             <ReactSortable list={gridDrag} setList={setGridDrag} animation={200} className="grid grid-cols-2 xs sm:grid-cols-4 md:grid-cols-8 gap-8 place-items-center">
                                 {gridDrag.map((item, index) => {
                                     return (

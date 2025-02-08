@@ -86,8 +86,6 @@ const Validation = () => {
             timer: 3000,
         });
         if (response.success) {
-            console.log(response);
-
             toast.fire({
                 icon: 'success',
                 title: response.message,
