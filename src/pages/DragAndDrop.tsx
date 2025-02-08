@@ -155,7 +155,7 @@ const DragAndDrop = () => {
                                             className="w-24 h-24 rounded-md shadow dark:border-dark flex items-center justify-center font-semibold cursor-grab"
                                             onClick={() => selectItem(index)}
                                         >
-                                            <Item name={item.name} type={item.type} history={gridDrag} />
+                                            <Item name={item.name} type={item.type} />
                                         </div>
                                     );
                                 })}
