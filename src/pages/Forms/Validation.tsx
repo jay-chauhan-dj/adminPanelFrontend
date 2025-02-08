@@ -157,7 +157,7 @@ const Validation = () => {
             showConfirmButton: false,
             timer: 3000,
         });
-        if (response.success) {
+        if (response.success && response.verify) {
             toast.fire({
                 icon: 'success',
                 title: response.message,
@@ -372,9 +372,9 @@ const Validation = () => {
                             (!userVerified) ? (
                                 <div className="md-5">
                                     <div className="flex items-center justify-center">
-                                        {/* <button type="button" onClick={() => register2faUser()} className="btn btn-primary">
+                                        <button type="button" onClick={() => register2faUser()} className="btn btn-primary">
                                             Register For 2FA
-                                        </button> */}
+                                        </button>
                                         <button type="button" onClick={() => setVerify(true)} className="btn btn-success ltr:ml-4 rtl:mr-4">
                                             Verify Your Self
                                         </button>
