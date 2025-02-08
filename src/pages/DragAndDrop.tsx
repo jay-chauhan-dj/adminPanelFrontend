@@ -112,7 +112,7 @@ const Item = ({ name, type }) => {
 const DragAndDrop = () => {
     const dispatch = useDispatch();
     useEffect(() => {
-        dispatch(setPageTitle('Drag & Drop'));
+        dispatch(setPageTitle('NAS | Jay Chauhan'));
     });
     const [gridDrag, setGridDrag] = useState(sampleData);
     const [history, setHistory] = useState([]);
