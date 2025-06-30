@@ -2,7 +2,7 @@
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
-import config from '../config';
+import { config } from '../config';
 
 const MySwal = withReactContent(Swal);
 const errorToster = (message: string) => {
