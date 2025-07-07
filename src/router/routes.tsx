@@ -15,6 +15,7 @@ const componentMap = {
     'Apps/Invoice/Preview': lazy(() => import('../pages/Apps/Invoice/Preview')),
     'Apps/Invoice/Add': lazy(() => import('../pages/Apps/Invoice/Add')),
     'Apps/Invoice/Edit': lazy(() => import('../pages/Apps/Invoice/Edit')),
+    'Apps/Invoice/Invoices': lazy(() => import('../pages/Apps/Invoice/Invoices')), // New Invoices Table
     'Components/Tabs': lazy(() => import('../pages/Components/Tabs')),
     'Components/Accordians': lazy(() => import('../pages/Components/Accordians')),
     'Components/Modals': lazy(() => import('../pages/Components/Modals')),
