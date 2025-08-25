@@ -71,7 +71,7 @@ export const deleteRequest = async (url: string, params = {}, headers = {}) => {
 export const login = async (username: any, password: any, otp: any, loginKey: any) => {
     try {
         const headers = { loginKey: loginKey };
-        const response = await axiosInstance.post('/v1/login', { username, password, otpwwwww }, { headers });
+        const response = await axiosInstance.post('/v1/login', { username, password, otp }, { headers });
         const accessToken = response.data.accessToken;
         const refreshToken = response.data.refreshToken;
         const email = response.data.email;
