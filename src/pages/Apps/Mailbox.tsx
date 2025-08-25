@@ -27,7 +27,7 @@ const Mailbox = () => {
 
     const defaultParams = {
         id: null,
-        from: 'contact@dj-jay.in',
+        from: localStorage.getItem('email'),
         to: '',
         cc: '',
         title: '',
