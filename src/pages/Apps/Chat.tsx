@@ -86,6 +86,8 @@ const Chat = () => {
     const [selectedUser, setSelectedUser] = useState<any>(null);
     const [textMessage, setTextMessage] = useState('');
     const [filteredItems, setFilteredItems] = useState<any>(contactList);
+    const [eventSource, setEventSource] = useState<EventSource | null>(null);
+    const [pollingInterval, setPollingInterval] = useState<any>(null);
 
     useEffect(() => {
         const getSms = async () => {
@@ -103,6 +105,60 @@ const Chat = () => {
 
     }, [searchUser]);
 
+    useEffect(() => {
+        if (!selectedUser) return;
+
+        const conversationId = selectedUser.userId;
+        const apiBase = import.meta.env.VITE_API_BASE || window.location.origin.replace(':5173', ':3000');
+
+        if (eventSource) eventSource.close();
+        if (pollingInterval) clearInterval(pollingInterval);
+
+        try {
+            const es = new EventSource(`${apiBase}/v1/whatsapp/stream/${conversationId}`);
+            
+            es.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type === 'message:new') {
+                    setTimeout(async () => {
+                        const response = await getRequest(`/v1/whatsapp/getWhatsappMessages`, {}, headers);
+                        setContactList(response);
+                        setFilteredItems(response);
+                        scrollToBottom();
+                    }, 500);
+                }
+            };
+
+            es.onerror = () => {
+                es.close();
+                const interval = setInterval(async () => {
+                    try {
+                        const response = await getRequest(`/v1/whatsapp/getWhatsappMessages`, {}, headers);
+                        setContactList(response);
+                        setFilteredItems(response);
+                    } catch (e) {}
+                }, 3000);
+                setPollingInterval(interval);
+            };
+
+            setEventSource(es);
+        } catch (error) {
+            const interval = setInterval(async () => {
+                try {
+                    const response = await getRequest(`/v1/whatsapp/getWhatsappMessages`, {}, headers);
+                    setContactList(response);
+                    setFilteredItems(response);
+                } catch (e) {}
+            }, 3000);
+            setPollingInterval(interval);
+        }
+
+        return () => {
+            if (eventSource) eventSource.close();
+            if (pollingInterval) clearInterval(pollingInterval);
+        };
+    }, [selectedUser]);
+
     const scrollToBottom = () => {
         if (isShowUserChat) {
             setTimeout(() => {
@@ -113,6 +169,8 @@ const Chat = () => {
         }
     };
     const selectUser = (user: any) => {
+        if (eventSource) eventSource.close();
+        if (pollingInterval) clearInterval(pollingInterval);
         setSelectedUser(user);
         setIsShowUserChat(true);
         scrollToBottom();
@@ -126,36 +184,21 @@ const Chat = () => {
 
     const sendMessage = async () => {
         if (textMessage.trim()) {
-            let list = contactList;
-            let user: any = list.find((d) => d.userId === selectedUser.userId);
-            let messageData = {
+            const messageData = {
                 to: selectedUser.userId,
                 message: textMessage
             };
-            let response = await postRequest("/v1/whatsapp/sendMessage", messageData, {}, headers);
+            setTextMessage('');
+            
+            const response = await postRequest("/v1/whatsapp/sendMessage", messageData, {}, headers);
 
-            let date = getCurrentFormattedDate();
-            if (response.status == "success") {
-                if (user.messages[date]) {
-                    user.messages[date].push({
-                        fromUserId: selectedUser.userId,
-                        toUserId: 0,
-                        text: textMessage,
-                        time: 'Just now',
-                    });
-                } else {
-                    user.messages[date] = [
-                        {
-                            fromUserId: selectedUser.userId,
-                            toUserId: 0,
-                            text: textMessage,
-                            time: 'Just now',
-                        }
-                    ];
-                }
-                setFilteredItems(list);
-                setTextMessage('');
-                scrollToBottom();
+            if (response.status === "success") {
+                setTimeout(async () => {
+                    const updatedMessages = await getRequest("/v1/whatsapp/getWhatsappMessages", {}, headers);
+                    setContactList(updatedMessages);
+                    setFilteredItems(updatedMessages);
+                    scrollToBottom();
+                }, 300);
             } else {
                 errorToster(response.message);
             }
@@ -652,13 +695,12 @@ const Chat = () => {
                             <div className="h-px w-full border-b border-white-light dark:border-[#1b2e4b]"></div>
 
                             <PerfectScrollbar className="relative h-full sm:h-[calc(100vh_-_300px)] chat-conversation-box">
-                                {selectedUser.messages ? (
+                                {selectedUser && filteredItems.find((u: any) => u.userId === selectedUser.userId)?.messages ? (
                                     <>
                                         {
-
-                                            Object.keys(selectedUser.messages).map((date: any, index: any) => {
+                                            Object.keys(filteredItems.find((u: any) => u.userId === selectedUser.userId).messages).map((date: any, index: any) => {
                                                 return (
-                                                    <Messages selectedUser={selectedUser} date={date} key={index} />
+                                                    <Messages selectedUser={filteredItems.find((u: any) => u.userId === selectedUser.userId)} date={date} key={index} />
                                                 );
                                             })
                                         }
