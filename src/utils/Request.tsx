@@ -2,7 +2,7 @@
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
-import config from '../config';
+import { config } from '../config';
 
 const MySwal = withReactContent(Swal);
 const errorToster = (message: string) => {
@@ -74,8 +74,10 @@ export const login = async (username: any, password: any, otp: any, loginKey: an
         const response = await axiosInstance.post('/v1/login', { username, password, otp }, { headers });
         const accessToken = response.data.accessToken;
         const refreshToken = response.data.refreshToken;
+        const email = response.data.email;
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
+        localStorage.setItem('email', email);
         return true;
     } catch (error) {
         handleError(error);
