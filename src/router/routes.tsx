@@ -100,5 +100,6 @@ const componentMap = {
     'Forms/MarkDownEditor': lazy(() => import('../pages/Forms/MarkDownEditor')),
     'Forms/DateRangePicker': lazy(() => import('../pages/Forms/DateRangePicker')),
     'Forms/Clipboard': lazy(() => import('../pages/Forms/Clipboard')),
+    'Apps/WebsiteContact': lazy(() => import('../pages/Apps/WebsiteContact')),
 };
 export { componentMap };
