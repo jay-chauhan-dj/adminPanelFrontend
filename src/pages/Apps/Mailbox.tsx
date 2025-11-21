@@ -16,29 +16,37 @@ const Mailbox = () => {
     const dispatch = useDispatch();
 
     const [mailList, setMailList] = useState([]);
+    const [companyEmails, setCompanyEmails] = useState([]);
+
+    const headers = {
+        "Content-Type": "application/json",
+        "authorization": "Bearer " + localStorage.getItem('accessToken')
+    };
+    
     useEffect(() => {
         const getEmails = async () => {
             const response = await getRequest("/v1/email/getEmails", {}, headers);
             setMailList(response);
-        }
+        };
+        const getEmailClients = async () => {
+            const response = await getRequest("/v1/email/getEmailClients", {}, headers);
+            console.log('Email clients response:', response);
+            setCompanyEmails(response);
+        };
         getEmails();
+        getEmailClients();
         dispatch(setPageTitle('Mailbox'));
     }, [dispatch]);
 
     const defaultParams = {
         id: null,
-        from: localStorage.getItem('email'),
+        from: '',
         to: '',
         cc: '',
         title: '',
         file: null,
         description: '',
         displayDescription: '',
-    };
-
-    const headers = {
-        "Content-Type": "application/json",
-        "authorization": "Bearer " + localStorage.getItem('accessToken')
     };
 
     const [isShowMailMenu, setIsShowMailMenu] = useState(false);
@@ -1310,7 +1318,7 @@ const Mailbox = () => {
                                                                     className={`dark:text-gray-300 whitespace-nowrap font-semibold ${!mail.isUnread ? 'text-gray-500 dark:text-gray-500 font-normal' : ''
                                                                         }`}
                                                                 >
-                                                                    {mail.firstName ? mail.firstName + ' ' + mail.lastName : ((mail.type == "inbox") ? mail.emailFrom : mail.emailTo)}
+                                                                    {mail.displayName || (mail.firstName ? mail.firstName + ' ' + mail.lastName : ((mail.type == "inbox") ? mail.emailFrom : mail.emailTo))}
                                                                 </div>
                                                             </div>
                                                         </td>
@@ -1710,6 +1718,52 @@ const Mailbox = () => {
                             <div className="h-px bg-gradient-to-l from-indigo-900/20 via-black dark:via-white to-indigo-900/20 opacity-[0.1]"></div>
                             <form className="p-6 grid gap-6">
                                 <div>
+                                    <label htmlFor="from" className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">From (Sender Email)</label>
+                                    <select
+                                        id="from"
+                                        className="form-select"
+                                        value={params.from}
+                                        onChange={(e) => {
+                                            changeValue(e);
+                                            const selectedEmail = companyEmails.find((email: any) => email.emailClientEmail === e.target.value);
+                                            if (selectedEmail) {
+                                                setParams({ ...params, from: e.target.value, name: selectedEmail.emailClientName });
+                                            }
+                                        }}
+                                        disabled={sendingMail}
+                                    >
+                                        <option value="">Select From Email</option>
+                                        {companyEmails.map((email: any, index: number) => (
+                                            <option key={index} value={email.emailClientEmail}>
+                                                {email.emailClientName} ({email.emailClientEmail})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {params.from && (
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">Selected Email</label>
+                                        <div className="form-input bg-gray-100 dark:bg-gray-800">{params.from}</div>
+                                    </div>
+                                )}
+
+                                {params.from && (
+                                    <div>
+                                        <label htmlFor="name" className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">Sender Name (shown to recipient)</label>
+                                        <input 
+                                            id="name" 
+                                            type="text" 
+                                            className="form-input" 
+                                            placeholder="Sender name" 
+                                            value={params.name || ''} 
+                                            onChange={(e) => changeValue(e)} 
+                                            readOnly={sendingMail} 
+                                        />
+                                    </div>
+                                )}
+
+                                <div>
                                     <input
                                         id="to"
                                         type="text"
@@ -1719,6 +1773,7 @@ const Mailbox = () => {
                                         onChange={(e) => {
                                             changeValue(e);
                                         }}
+                                        readOnly={sendingMail}
                                     />
                                 </div>
 
@@ -1728,10 +1783,6 @@ const Mailbox = () => {
 
                                 <div>
                                     <input id="subject" type="text" className="form-input" placeholder="Enter Subject" defaultValue={params.subject} onChange={(e) => changeValue(e)} readOnly={sendingMail} />
-                                </div>
-
-                                <div>
-                                    <input id="name" type="text" className="form-input" placeholder="Enter Name" defaultValue={params.name} onChange={(e) => changeValue(e)} readOnly={sendingMail} />
                                 </div>
 
                                 <div className="h-fit">
