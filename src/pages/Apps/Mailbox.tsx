@@ -25,13 +25,25 @@ const Mailbox = () => {
     
     useEffect(() => {
         const getEmails = async () => {
-            const response = await getRequest("/v1/email/getEmails", {}, headers);
-            setMailList(response);
+            try {
+                const response = await getRequest("/v1/email/getEmails", {}, headers);
+                setMailList(response || []);
+            } catch (error) {
+                console.error('Error fetching emails:', error);
+                setMailList([]);
+            }
         };
         const getEmailClients = async () => {
-            const response = await getRequest("/v1/email/getEmailClients", {}, headers);
-            console.log('Email clients response:', response);
-            setCompanyEmails(response);
+            try {
+                const response = await getRequest("/v1/email/getEmailClients", {}, headers);
+                console.log('Email clients response:', response);
+                const emailData = response?.data || response || [];
+                console.log('Setting companyEmails to:', emailData);
+                setCompanyEmails(emailData);
+            } catch (error) {
+                console.error('Error fetching email clients:', error);
+                setCompanyEmails([]);
+            }
         };
         getEmails();
         getEmailClients();
@@ -44,6 +56,8 @@ const Mailbox = () => {
         to: '',
         cc: '',
         title: '',
+        subject: '',
+        name: '',
         file: null,
         description: '',
         displayDescription: '',
@@ -52,7 +66,7 @@ const Mailbox = () => {
     const [isShowMailMenu, setIsShowMailMenu] = useState(false);
     const [isEdit, setIsEdit] = useState(false);
     const [selectedTab, setSelectedTab] = useState('inbox');
-    const [filteredMailList, setFilteredMailList] = useState<any>(mailList.filter((d) => d.type === 'inbox'));
+    const [filteredMailList, setFilteredMailList] = useState<any>([]);
     const [ids, setIds] = useState<any>([]);
     const [searchText, setSearchText] = useState<any>('');
     const [selectedMail, setSelectedMail] = useState<any>(null);
@@ -225,13 +239,13 @@ const Mailbox = () => {
             setParams(JSON.parse(JSON.stringify(defaultParams)));
         } else if (type === 'draft') {
             let data = JSON.parse(JSON.stringify(item));
-            setParams({ ...data, from: defaultParams.from, to: data.email, displayDescription: data.email });
+            setParams({ ...data, from: defaultParams.from, to: data.emailTo || data.email || '', displayDescription: data.displayDescription || '' });
         } else if (type === 'reply') {
             let data = JSON.parse(JSON.stringify(item));
             setParams({
                 ...data,
                 from: defaultParams.from,
-                to: data.email,
+                to: data.emailFrom || data.email || '',
                 title: 'Re: ' + data.title,
                 displayDescription: 'Re: ' + data.title,
             });
@@ -240,7 +254,7 @@ const Mailbox = () => {
             setParams({
                 ...data,
                 from: defaultParams.from,
-                to: data.email,
+                to: data.emailFrom || data.email || '',
                 title: 'Fwd: ' + data.title,
                 displayDescription: 'Fwd: ' + data.title,
             });
@@ -251,6 +265,12 @@ const Mailbox = () => {
     const searchMails = (isResetPage = true) => {
         if (isResetPage) {
             pager.currentPage = 1;
+        }
+
+        if (!Array.isArray(mailList)) {
+            setFilteredMailList([]);
+            setPagedMails([]);
+            return;
         }
 
         let res;
@@ -1725,7 +1745,7 @@ const Mailbox = () => {
                                         value={params.from}
                                         onChange={(e) => {
                                             changeValue(e);
-                                            const selectedEmail = companyEmails.find((email: any) => email.emailClientEmail === e.target.value);
+                                            const selectedEmail = companyEmails.find((email: any) => email.emailClientFromAddress === e.target.value);
                                             if (selectedEmail) {
                                                 setParams({ ...params, from: e.target.value, name: selectedEmail.emailClientName });
                                             }
@@ -1733,9 +1753,9 @@ const Mailbox = () => {
                                         disabled={sendingMail}
                                     >
                                         <option value="">Select From Email</option>
-                                        {companyEmails.map((email: any, index: number) => (
-                                            <option key={index} value={email.emailClientEmail}>
-                                                {email.emailClientName} ({email.emailClientEmail})
+                                        {Array.isArray(companyEmails) && companyEmails.map((email: any, index: number) => (
+                                            <option key={index} value={email.emailClientFromAddress}>
+                                                {email.emailClientName} ({email.emailClientFromAddress})
                                             </option>
                                         ))}
                                     </select>
