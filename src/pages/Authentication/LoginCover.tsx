@@ -5,7 +5,7 @@ import { setPageTitle, toggleRTL, toggleSemidark, toggleTheme } from '../../stor
 import Dropdown from '../../components/Dropdown';
 import { IRootState } from '../../store';
 import i18next from 'i18next';
-import { login, postRequest } from '../../utils/Request';
+import { login, postRequest, getRequest } from '../../utils/Request';
 import { handleTextbox } from '../../utils/Functions';
 
 const LoginCover = () => {
@@ -56,14 +56,29 @@ const LoginCover = () => {
         setShowPassword(!showPassword);
     };
 
+    const handleEnterKey = (e: React.KeyboardEvent, action: () => void) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            action();
+        }
+    };
+
     const submitForm = async (event: any) => {
         event.preventDefault();
         setLoginInitiated(true);
         const loggedIn = await login(username, password, otp, loginKey);
-        setLoginInitiated(false);
         if (loggedIn) {
+            try {
+                const userAccess = await getRequest('/v1/user-access-check');
+                localStorage.setItem('userAccess', JSON.stringify(userAccess?.access || []));
+                localStorage.setItem('userRole', userAccess?.role || 'Admin');
+            } catch (error) {
+                localStorage.setItem('userAccess', JSON.stringify(['dashboard']));
+                localStorage.setItem('userRole', 'User');
+            }
             navigate('/');
         }
+        setLoginInitiated(false);
     };
 
     return (
@@ -80,17 +95,7 @@ const LoginCover = () => {
                     <div className="relative hidden w-full items-center justify-center bg-[linear-gradient(225deg,rgba(239,18,98,1)_0%,rgba(67,97,238,1)_100%)] p-5 lg:inline-flex lg:max-w-[835px] xl:-ms-28 ltr:xl:skew-x-[14deg] rtl:xl:skew-x-[-14deg]">
                         <div className="absolute inset-y-0 w-8 from-primary/10 via-transparent to-transparent ltr:-right-10 ltr:bg-gradient-to-r rtl:-left-10 rtl:bg-gradient-to-l xl:w-16 ltr:xl:-right-20 rtl:xl:-left-20"></div>
                         <div className="ltr:xl:-skew-x-[14deg] rtl:xl:skew-x-[14deg]">
-                            <Link to="/" className="w-48 block lg:w-80 ms-10">
-                                <table className='mx-auto'>
-                                    <tbody>
-                                        <tr>
-                                            <td><img src="/favicon.png" alt="Logo" className="mx-auto w-30" /></td>
-                                            <td><h1 className="text-3xl font-extrabold uppercase !leading-snug md:text-4xl text-white-light">Admin&nbsp;Panel</h1></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </Link>
-                            <div className="mt-24 hidden w-full max-w-[430px] lg:block">
+                            <div className="mt-24 hidden w-full max-w-[430px] lg:block mx-auto">
                                 <img src="/assets/images/auth/login.svg" alt="Cover Image" className="w-full" />
                             </div>
                         </div>
@@ -153,7 +158,7 @@ const LoginCover = () => {
                                 <div>
                                     <label htmlFor="Email">Email</label>
                                     <div className="relative text-white-dark">
-                                        <input id="Email" type="text" placeholder="Enter Username" onChange={handleTextbox(setUsername)} className="form-input ps-10 placeholder:text-white-dark" required tabIndex={1} />
+                                        <input id="Email" type="text" placeholder="Enter Username" onChange={handleTextbox(setUsername)} onKeyDown={(e) => handleEnterKey(e, () => !otpSent && sendOtp())} className="form-input ps-10 placeholder:text-white-dark" required tabIndex={1} />
                                         <span className="absolute start-4 top-1/2 -translate-y-1/2">
                                             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                                                 <path
@@ -172,7 +177,7 @@ const LoginCover = () => {
                                 <div>
                                     <label htmlFor="Password">Password</label>
                                     <div className="relative text-white-dark">
-                                        <input id="Password" type={showPassword ? "text" : "password"} placeholder="Enter Password" onChange={handleTextbox(setPassword)} className="form-input ps-10 placeholder:text-white-dark" required tabIndex={2} />
+                                        <input id="Password" type={showPassword ? "text" : "password"} placeholder="Enter Password" onChange={handleTextbox(setPassword)} onKeyDown={(e) => handleEnterKey(e, () => !otpSent && sendOtp())} className="form-input ps-10 placeholder:text-white-dark" required tabIndex={2} />
                                         <span className="absolute start-4 top-1/2 -translate-y-1/2">
                                             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                                                 <path
@@ -219,7 +224,7 @@ const LoginCover = () => {
                                 {otpSent ? (<div>
                                     <label htmlFor="Otp">Otp</label>
                                     <div className="relative text-white-dark">
-                                        <input id="Otp" type="text" pattern="[0-9]*" placeholder="Enter Otp" onChange={handleTextbox(setOtp)} onKeyPress={handleKeyPress} className="form-input ps-10 placeholder:text-white-dark" minLength={6} maxLength={6} required tabIndex={3} />
+                                        <input id="Otp" type="text" pattern="[0-9]*" placeholder="Enter Otp" onChange={handleTextbox(setOtp)} onKeyPress={handleKeyPress} onKeyDown={(e) => handleEnterKey(e, () => submitForm(e))} className="form-input ps-10 placeholder:text-white-dark" minLength={6} maxLength={6} required tabIndex={3} />
                                         <span className="absolute start-4 top-1/2 -translate-y-1/2">
                                             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                 <path d="M14.2084 13.5521C16.3025 13.5521 18 11.8615 18 9.77606C18 7.6906 16.3025 6 14.2084 6C12.1144 6 10.4169 7.6906 10.4169 9.77606C10.4169 10.742 10.8578 11.4446 10.8578 11.4446L6.27264 16.011C6.0669 16.2159 5.77886 16.7486 6.27264 17.2404L6.8017 17.7673C7.00743 17.9429 7.52471 18.1888 7.94796 17.7673L8.56519 17.1526C9.18242 17.7673 9.88782 17.416 10.1523 17.0647C10.5932 16.45 10.0642 15.8353 10.0642 15.8353L10.2405 15.6597C11.087 16.5027 11.8277 16.011 12.0922 15.6597C12.5331 15.045 12.0922 14.4303 12.0922 14.4303C11.9159 14.079 11.5632 14.079 12.004 13.64L12.5331 13.113C12.9564 13.4643 13.8264 13.5521 14.2084 13.5521Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
@@ -359,7 +364,7 @@ const LoginCover = () => {
                                 </Link>
                             </div>
                         </div>
-                        <p className="absolute bottom-6 w-full text-center dark:text-white">© {new Date().getFullYear()}.Jay Chauhan All Rights Reserved.</p>
+                        <p className="absolute bottom-6 w-full text-center dark:text-white">© {new Date().getFullYear()}. All Rights Reserved.</p>
                     </div>
                 </div>
             </div>

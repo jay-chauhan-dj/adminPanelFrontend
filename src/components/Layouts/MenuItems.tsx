@@ -55,14 +55,17 @@ const ItemList: React.FC = () => {
                 if (data.message == "Unauthorized") {
                     navigate("/login");
                 }
-                setMenuData(data);
+                // Ensure data is an array
+                if (Array.isArray(data)) {
+                    setMenuData(data);
+                } else {
+                    console.error('Menu data is not an array:', data);
+                    setMenuData([]);
+                }
             } catch (err: any) {
                 setError(err.message);
-                MySwal.fire({
-                    title: 'Error fetching menu items',
-                    text: err.message,
-                    icon: 'error',
-                });
+                console.error('Error fetching menu:', err);
+                setMenuData([]);
             } finally {
                 setLoading(false);
             }
@@ -73,6 +76,9 @@ const ItemList: React.FC = () => {
 
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error loading menu items</div>;
+    if (!Array.isArray(menuData) || menuData.length === 0) {
+        return <div className="p-4">No menu items available</div>;
+    }
 
     return (
         <ul className="relative font-semibold space-y-0.5 p-4 py-0">

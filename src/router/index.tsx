@@ -4,6 +4,7 @@ import BlankLayout from '../components/Layouts/BlankLayout';
 import DefaultLayout from '../components/Layouts/DefaultLayout';
 import { getRequest } from '../utils/Request';
 import { componentMap } from './routes';
+import { hasAccess } from '../utils/AccessControl';
 
 // Static imports for authentication components
 import LoginCover from '../pages/Authentication/LoginCover';
@@ -33,27 +34,28 @@ const DynamicRoute = () => {
     }
 
     const finalRoutes = routes.map((route) => {
-        let Component = componentMap[route.componentLocation];
+            let Component = componentMap[route.componentLocation];
 
-        if (!Component) {
-            return null; // Handle case where component is not found in the map
-        }
+            if (!Component) {
+                return null; // Handle case where component is not found in the map
+            }
 
-        const routeElement = (
-            <PrivateRoute>
-                {route.layout === 'blank' ?
-                    <BlankLayout><Component /></BlankLayout> :
-                    <DefaultLayout><Component /></DefaultLayout>
-                }
-            </PrivateRoute>
-        );
+            const routeElement = (
+                <PrivateRoute>
+                    {route.layout === 'blank' ?
+                        <BlankLayout><Component /></BlankLayout> :
+                        <DefaultLayout><Component /></DefaultLayout>
+                    }
+                </PrivateRoute>
+            );
 
+            return {
+                path: route.path,
+                element: routeElement
+            };
+        }).filter(route => route !== null);
 
-        return {
-            path: route.path,
-            element: routeElement
-        };
-    }).filter(route => route !== null);
+    console.log('Total routes loaded:', finalRoutes.length);
 
     const router = createBrowserRouter([
         {
