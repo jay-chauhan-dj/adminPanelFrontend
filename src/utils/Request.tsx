@@ -87,9 +87,14 @@ export const login = async (username: any, password: any, otp: any, loginKey: an
         const accessToken = response.data.accessToken;
         const refreshToken = response.data.refreshToken;
         const email = response.data.email;
+        const role = response.data.role || 'User';
+        const access = response.data.access || [];
+        
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
         localStorage.setItem('email', email);
+        localStorage.setItem('userRole', role);
+        localStorage.setItem('userAccess', JSON.stringify(access));
         return true;
     } catch (error) {
         handleError(error);

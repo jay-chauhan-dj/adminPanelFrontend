@@ -786,6 +786,7 @@ const Chat = () => {
                                         <button type="button" className="bg-[#F4F4F4] dark:bg-[#1B2E4B] hover:bg-primary-light rounded-md p-2 hover:text-primary flex items-center gap-2" onClick={async () => {
                                             if (selectedUser) {
                                                 await updateRequestStatus(selectedUser.userId, 0);
+                                                postRequest("/v1/whatsapp/sendTemplate", { to: selectedUser.userId, templateName: "service_ratings", templateParams: [] }, {}, headers).catch(() => {});
                                             }
                                             if (eventSource) eventSource.close();
                                             if (pollingInterval) clearInterval(pollingInterval);

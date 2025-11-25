@@ -68,14 +68,6 @@ const LoginCover = () => {
         setLoginInitiated(true);
         const loggedIn = await login(username, password, otp, loginKey);
         if (loggedIn) {
-            try {
-                const userAccess = await getRequest('/v1/user-access-check');
-                localStorage.setItem('userAccess', JSON.stringify(userAccess?.access || []));
-                localStorage.setItem('userRole', userAccess?.role || 'Admin');
-            } catch (error) {
-                localStorage.setItem('userAccess', JSON.stringify(['dashboard']));
-                localStorage.setItem('userRole', 'User');
-            }
             navigate('/');
         }
         setLoginInitiated(false);

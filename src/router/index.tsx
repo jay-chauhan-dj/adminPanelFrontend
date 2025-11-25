@@ -41,7 +41,7 @@ const DynamicRoute = () => {
             }
 
             const routeElement = (
-                <PrivateRoute>
+                <PrivateRoute requiredAccess={route.requiredAccess}>
                     {route.layout === 'blank' ?
                         <BlankLayout><Component /></BlankLayout> :
                         <DefaultLayout><Component /></DefaultLayout>

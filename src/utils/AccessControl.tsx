@@ -1,12 +1,16 @@
 export const hasAccess = (area: string): boolean => {
+    const role = getUserRole();
+    if (role === 'Admin') return true;
+    
     const access = localStorage.getItem('userAccess');
-    if (!access) return true; // Allow all if no access data
+    if (!access) return false;
+    
     try {
         const accessAreas = JSON.parse(access);
-        if (!accessAreas || accessAreas.length === 0) return true;
+        if (!accessAreas || accessAreas.length === 0) return false;
         return accessAreas.includes(area);
     } catch {
-        return true;
+        return false;
     }
 };
 
@@ -17,3 +21,12 @@ export const getUserRole = (): string => {
 export const isAdmin = (): boolean => {
     return getUserRole() === 'Admin';
 };
+
+export const getAccessAreas = (): string[] => {
+    try {
+        const access = localStorage.getItem('userAccess');
+        return access ? JSON.parse(access) : [];
+    } catch {
+        return [];
+    }
+};;
