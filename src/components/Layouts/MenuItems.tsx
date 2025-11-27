@@ -53,13 +53,7 @@ const ItemList: React.FC = () => {
                     "authorization": "Bearer " + localStorage.getItem('accessToken')
                 };
                 
-                // Fetch biometric status
-                const bioResponse = await getRequest("/v1/attendance/current-user", {}, headers);
-                const bioData = await bioResponse.json();
-                if (bioData.success) {
-                    setHasBiometric(bioData.user.hasBiometric);
-                }
-
+                
                 // Fetch menu items
                 const data = await postRequest('/v1/menu/getMenuItems', {}, {}, headers);
                 if (data.message == "Unauthorized") {
@@ -71,6 +65,13 @@ const ItemList: React.FC = () => {
                 } else {
                     console.error('Menu data is not an array:', data);
                     setMenuData([]);
+                }
+                
+                // Fetch biometric status
+                const bioResponse = await getRequest("/v1/attendance/current-user", {}, headers);
+                const bioData = await bioResponse.json();
+                if (bioData.success) {
+                    setHasBiometric(bioData.user.hasBiometric);
                 }
             } catch (err: any) {
                 setError(err.message);
