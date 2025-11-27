@@ -102,5 +102,8 @@ const componentMap = {
     'Forms/Clipboard': lazy(() => import('../pages/Forms/Clipboard')),
     'Apps/WebsiteContact': lazy(() => import('../pages/Apps/WebsiteContact')),
     'Users/UserAccess': lazy(() => import('../pages/Users/UserAccess')),
+    'Attendance/ClockInOut': lazy(() => import('../pages/Attendance/ClockInOut')),
+    'Attendance/RegisterFace': lazy(() => import('../pages/Attendance/RegisterFace')),
+    'Attendance/Settings': lazy(() => import('../pages/Attendance/Settings')),
 };
 export { componentMap };

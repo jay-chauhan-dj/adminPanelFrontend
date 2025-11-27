@@ -43,14 +43,25 @@ const ItemList: React.FC = () => {
     const [menuData, setMenuData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [hasBiometric, setHasBiometric] = useState<boolean | null>(null);
 
     useEffect(() => {
-        const fetchMenuItems = async () => {
+        const fetchData = async () => {
             try {
                 const headers = {
                     "Content-Type": "application/json",
                     "authorization": "Bearer " + localStorage.getItem('accessToken')
                 };
+                
+                // Fetch biometric status
+                const API_BASE_URL = import.meta.env.REACT_APP_API_BASE || 'http://localhost:3000';
+                const bioResponse = await fetch(`${API_BASE_URL}/v1/attendance/current-user`, { headers });
+                const bioData = await bioResponse.json();
+                if (bioData.success) {
+                    setHasBiometric(bioData.user.hasBiometric);
+                }
+
+                // Fetch menu items
                 const data = await postRequest('/v1/menu/getMenuItems', {}, {}, headers);
                 if (data.message == "Unauthorized") {
                     navigate("/login");
@@ -71,8 +82,23 @@ const ItemList: React.FC = () => {
             }
         };
 
-        fetchMenuItems();
+        fetchData();
     }, []);
+
+    // Filter menu items based on biometric status
+    const filterMenuItems = (items) => {
+        return items.filter(item => {
+            // Hide "Register Face" menu if user already has biometric
+            if (hasBiometric && item.menuRoute === '/attendance/register-face') {
+                return false;
+            }
+            // Recursively filter children
+            if (item.children && item.children.length > 0) {
+                item.children = filterMenuItems(item.children);
+            }
+            return true;
+        });
+    };
 
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error loading menu items</div>;
@@ -80,9 +106,11 @@ const ItemList: React.FC = () => {
         return <div className="p-4">No menu items available</div>;
     }
 
+    const filteredMenuData = hasBiometric !== null ? filterMenuItems(menuData) : menuData;
+
     return (
         <ul className="relative font-semibold space-y-0.5 p-4 py-0">
-            {renderMenu(menuData)}
+            {renderMenu(filteredMenuData)}
         </ul>
     );
 };
