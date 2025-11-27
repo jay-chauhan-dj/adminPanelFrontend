@@ -66,16 +66,15 @@ const ItemList: React.FC = () => {
                     console.error('Menu data is not an array:', data);
                     setMenuData([]);
                 }
-                
+
                 // Fetch biometric status
                 const bioResponse = await getRequest("/v1/attendance/current-user", {}, headers);
-                const bioData = await bioResponse.json();
-                if (bioData.success) {
-                    setHasBiometric(bioData.user.hasBiometric);
+                console.log('Biometric response:', bioResponse);
+                if (bioResponse.success) {
+                    setHasBiometric(bioResponse.user.hasBiometric);
                 }
             } catch (err: any) {
                 setError(err.message);
-                console.error('Error fetching menu:', err);
                 setMenuData([]);
             } finally {
                 setLoading(false);
