@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import { postRequest } from '../../utils/Request';
 
 const ClockInOutPublic = () => {
     const navigate = useNavigate();
@@ -83,17 +84,13 @@ const ClockInOutPublic = () => {
 
         setLoading(true);
         try {
-            const response = await fetch(`${API_BASE_URL}/v1/attendance-public/clock`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    image: imageData,
-                    action: action,
-                    latitude: location.latitude,
-                    longitude: location.longitude
-                })
-            });
-
+            const requestData = {
+                image: imageData,
+                action: action,
+                latitude: location.latitude,
+                longitude: location.longitude
+            }
+            const response = await postRequest(`/v1/attendance-public/clock`, requestData);
             const data = await response.json();
 
             if (response.ok && data.success) {

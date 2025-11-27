@@ -3,6 +3,7 @@ import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import { getRequest, postRequest } from '../../utils/Request';
 
 const ClockInOut = () => {
     const dispatch = useDispatch();
@@ -15,8 +16,8 @@ const ClockInOut = () => {
     const [action, setAction] = useState<'clock_in' | 'clock_out'>('clock_in');
     const [lastAttendance, setLastAttendance] = useState<any>(null);
     const [hasBiometric, setHasBiometric] = useState<boolean | null>(null);
-
-    const API_BASE_URL = import.meta.env.REACT_APP_API_BASE || 'http://localhost:3000';
+    const token = localStorage.getItem('accessToken');
+    const headers = { 'Authorization': `Bearer ${token}` };
 
     useEffect(() => {
         dispatch(setPageTitle('Clock In/Out'));
@@ -28,10 +29,7 @@ const ClockInOut = () => {
 
     const checkBiometric = async () => {
         try {
-            const token = localStorage.getItem('accessToken');
-            const response = await fetch(`${API_BASE_URL}/v1/attendance/current-user`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const response = await getRequest("/v1/attendance/current-user", {}, headers);
             const data = await response.json();
             if (data.success) {
                 setHasBiometric(data.user.hasBiometric);
@@ -55,10 +53,7 @@ const ClockInOut = () => {
         if (result.isConfirmed) {
             try {
                 const token = localStorage.getItem('accessToken');
-                const response = await fetch(`${API_BASE_URL}/v1/attendance/delete-face`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                const response = await getRequest(`/v1/attendance/delete-face`, {}, headers);
                 const data = await response.json();
                 if (data.success) {
                     await Swal.fire('Deleted!', 'Your face data has been deleted.', 'success');
@@ -136,21 +131,13 @@ const ClockInOut = () => {
         setLoading(true);
         setAction(selectedAction);
         try {
-            const token = localStorage.getItem('accessToken');
-            const response = await fetch(`${API_BASE_URL}/v1/attendance/clock`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    image: imageData,
-                    action: selectedAction,
-                    latitude: location.latitude,
-                    longitude: location.longitude
-                })
-            });
-
+            const requestData = {
+                image: imageData,
+                action: selectedAction,
+                latitude: location.latitude,
+                longitude: location.longitude
+            }
+            const response = await postRequest(`/v1/attendance/clock`, requestData, {}, headers);
             const data = await response.json();
 
             if (response.ok && data.success) {

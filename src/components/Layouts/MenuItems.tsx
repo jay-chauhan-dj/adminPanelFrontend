@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { postRequest } from '../../utils/Request';
+import { getRequest, postRequest } from '../../utils/Request';
 import { NavLink, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
@@ -54,8 +54,7 @@ const ItemList: React.FC = () => {
                 };
                 
                 // Fetch biometric status
-                const API_BASE_URL = import.meta.env.REACT_APP_API_BASE || 'http://localhost:3000';
-                const bioResponse = await fetch(`${API_BASE_URL}/v1/attendance/current-user`, { headers });
+                const bioResponse = await getRequest("/v1/attendance/current-user", {}, headers);
                 const bioData = await bioResponse.json();
                 if (bioData.success) {
                     setHasBiometric(bioData.user.hasBiometric);
