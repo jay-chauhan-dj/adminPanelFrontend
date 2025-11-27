@@ -34,7 +34,7 @@ const UserAccess = () => {
 
     const fetchUsers = async () => {
         try {
-            const response = await getRequest('/v1/users-access');
+                const response = await getRequest('/v1/userAccess/users');
             console.log('Users response:', response);
             if (response?.data && Array.isArray(response.data)) {
                 setUsers(response.data);
@@ -51,7 +51,7 @@ const UserAccess = () => {
 
     const fetchRoles = async () => {
         try {
-            const response = await getRequest('/v1/user-access');
+            const response = await getRequest('/v1/userAccess/roles');
             console.log('Roles response:', response);
             if (response?.data && Array.isArray(response.data)) {
                 setRoles(response.data);
@@ -77,9 +77,9 @@ const UserAccess = () => {
 
     const handleSubmit = async () => {
         if (editMode) {
-            await putRequest(`/v1/user-access/${currentRole.id}`, currentRole);
+            await putRequest(`/v1/userAccess/roles/${currentRole.id}`, currentRole);
         } else {
-            await postRequest('/v1/user-access', currentRole);
+            await postRequest('/v1/userAccess/roles', currentRole);
         }
         setShowModal(false);
         setCurrentRole({ id: null, role: '', access_area: [] });
@@ -92,7 +92,7 @@ const UserAccess = () => {
         const roleAreas = selectedRole ? selectedRole.access_area : [];
         const extraAreas = currentUser.customAreas.filter(area => !roleAreas.includes(area));
         
-        await putRequest(`/v1/users-access/${currentUser.userId}`, { role: currentUser.role, customAreas: extraAreas });
+        await putRequest(`/v1/userAccess/users/${currentUser.userId}`, { role: currentUser.role, customAreas: extraAreas });
         setShowUserModal(false);
         setCurrentUser({ userId: null, role: '', customAreas: [], roleAreas: [] });
         fetchUsers();
@@ -100,7 +100,7 @@ const UserAccess = () => {
 
     const handleDeleteUser = async (userId: number) => {
         if (confirm('Delete this user? This action cannot be undone.')) {
-            await deleteRequest(`/v1/users-access/${userId}`);
+            await deleteRequest(`/v1/userAccess/users/${userId}`);
             fetchUsers();
         }
     };
@@ -134,7 +134,7 @@ const UserAccess = () => {
 
     const handleDelete = async (id: number) => {
         if (confirm('Delete this role?')) {
-            await deleteRequest(`/v1/user-access/${id}`);
+            await deleteRequest(`/v1/userAccess/roles/${id}`);
             await fetchRoles();
             await fetchUsers();
         }
@@ -158,7 +158,7 @@ const UserAccess = () => {
                 ...newUser,
                 userAddress: JSON.stringify(newUser.userAddress)
             };
-            await postRequest('/v1/users-access/create', userData);
+            await postRequest('/v1/userAccess/users', userData);
             setShowAddUserModal(false);
             setNewUser({ userFirstName: '', userLastName: '', userEmail: '', userPhoneNumber: '', userWhatsappNumber: '', userAddress: { 'address-1': '', 'address-2': '', landmark: '', city: '', state: '', country: '', 'postal-code': '' }, userLogin: '', userPassword: '', userRole: '', customAreas: [], roleAreas: [] });
             await fetchUsers();
