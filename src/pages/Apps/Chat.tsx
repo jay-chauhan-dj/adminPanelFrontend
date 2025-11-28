@@ -25,8 +25,8 @@ const errorToster = (message) => {
     });
 };
 const loginUser = {
-    id: "919313190741",
-    name: 'Jay Chauhan',
+    id: "917990734502",
+    name: 'Morphsync Tech',
     path: '/favicon.png',
     designation: 'Software Developer',
 };
