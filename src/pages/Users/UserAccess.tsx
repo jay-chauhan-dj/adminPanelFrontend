@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { getRequest, postRequest, putRequest, deleteRequest } from '../../utils/Request';
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
+import PasswordChecklist from 'react-password-checklist';
 
 const UserAccess = () => {
     const [users, setUsers] = useState<any[]>([]);
@@ -20,7 +21,11 @@ const UserAccess = () => {
     const [phoneError, setPhoneError] = useState('');
     const [whatsappError, setWhatsappError] = useState('');
     const [slackError, setSlackError] = useState('');
+    const [usernameError, setUsernameError] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [sameAsPhone, setSameAsPhone] = useState(false);
+    const [hidePasswordRules, setHidePasswordRules] = useState(false);
     const [currentRole, setCurrentRole] = useState({ id: null, role: '', access_area: [] });
     const [currentUser, setCurrentUser] = useState({ userId: null, role: '', customAreas: [], roleAreas: [] });
     const [newUser, setNewUser] = useState({ userFirstName: '', userLastName: '', userEmail: '', userPhoneNumber: '', userWhatsappNumber: '', userAddress: { 'address-1': '', 'address-2': '', landmark: '', city: '', state: '', country: '', 'postal-code': '' }, userLogin: '', userPassword: '', userRole: '', customAreas: [], roleAreas: [] });
@@ -30,6 +35,15 @@ const UserAccess = () => {
         fetchRoles();
         fetchAvailableAreas();
     }, []);
+
+    useEffect(() => {
+        const pwd = newUser.userPassword;
+        const allValid = pwd.length >= 8 && /[A-Z]/.test(pwd) && /[0-9]/.test(pwd) && /[!@#$%^&*(),.?":{}|<>]/.test(pwd);
+        
+        if (!allValid && hidePasswordRules) {
+            setHidePasswordRules(false);
+        }
+    }, [newUser.userPassword, hidePasswordRules]);
 
     const fetchAvailableAreas = async () => {
         // Only your actual sidebar pages
@@ -182,6 +196,7 @@ const UserAccess = () => {
         setWhatsappError('');
         setSlackError('');
         setSameAsPhone(false);
+        setHidePasswordRules(false);
         setShowAddUserModal(true);
     };
 
@@ -195,18 +210,23 @@ const UserAccess = () => {
         return phoneRegex.test(phone);
     };
 
+
+
     const handleAddUser = async () => {
         setFormSubmitted(true);
         setEmailError('');
         setPhoneError('');
         setWhatsappError('');
         setSlackError('');
+        setUsernameError('');
+        setPasswordError('');
         
         if (!newUser.userEmail) {
             setEmailError('Email is required');
             return;
         }
-        
+
+
         if (!validateEmail(newUser.userEmail)) {
             setEmailError('Please enter a valid email address');
             return;
@@ -243,6 +263,28 @@ const UserAccess = () => {
             !newUser.userAddress['postal-code'] || !newUser.userLogin || !newUser.userPassword) {
             return;
         }
+        
+        // Check email exists
+        try {
+            const emailCheck = await getRequest(`/v1/userAccess/check-field/email/${newUser.userEmail}`);
+            if (emailCheck?.exists) {
+                setEmailError('Email already exists');
+                return;
+            }
+        } catch (error) {
+            console.error('Error checking email:', error);
+        }
+        
+        // Check username exists
+        try {
+            const usernameCheck = await getRequest(`/v1/userAccess/check-field/username/${newUser.userLogin}`);
+            if (usernameCheck?.exists) {
+                setUsernameError('Username already exists');
+                return;
+            }
+        } catch (error) {
+            console.error('Error checking username:', error);
+        }
 
         setIsCreatingUser(true);
         try {
@@ -272,7 +314,7 @@ const UserAccess = () => {
             setIsPincodeInDb(false);
             await fetchUsers();
         } catch (error: any) {
-            alert('Failed to create user: ' + (error?.response?.data?.message || error.message));
+            console.error('Error creating user:', error);
         } finally {
             setIsCreatingUser(false);
         }
@@ -295,7 +337,7 @@ const UserAccess = () => {
         if (pincode.length === 6) {
             try {
                 console.log('Fetching pincode:', pincode);
-                const response = await getRequest(`/v1/userAccess/pincode/${pincode}`);
+                const response = await getRequest(`/v1/userAccess/pincode/${pincode}`, {}, {}, true);
                 if (response?.city && response?.state && response?.country) {
                     console.log('Pincode found in DB:', response);
                     setNewUser(prev => ({
@@ -673,9 +715,20 @@ const UserAccess = () => {
                                                     className={`form-input w-full ${formSubmitted ? 'submitted' : ''} ${emailError ? 'border-red-500' : ''}`} 
                                                     placeholder="user@example.com" 
                                                     value={newUser.userEmail} 
-                                                    onChange={(e) => {
-                                                        setNewUser({...newUser, userEmail: e.target.value.toLowerCase()});
+                                                    onChange={async (e) => {
+                                                        const email = e.target.value.toLowerCase();
+                                                        setNewUser({...newUser, userEmail: email});
                                                         setEmailError('');
+                                                        if (validateEmail(email)) {
+                                                            try {
+                                                                const response = await getRequest(`/v1/userAccess/check-field/email/${email}`);
+                                                                if (response?.exists) {
+                                                                    setEmailError('Email already exists');
+                                                                }
+                                                            } catch (error) {
+                                                                console.error('Error checking email:', error);
+                                                            }
+                                                        }
                                                     }} 
                                                     required 
                                                 />
@@ -687,7 +740,7 @@ const UserAccess = () => {
                                                     <input 
                                                         type="text" 
                                                         className={`form-input w-full ${formSubmitted ? 'submitted' : ''} ${phoneError ? 'border-red-500' : ''}`} 
-                                                        placeholder="(###) ###-####" 
+                                                        placeholder="Phone Number" 
                                                         maxLength={10} 
                                                         value={newUser.userPhoneNumber} 
                                                         onChange={(e) => {
@@ -705,12 +758,13 @@ const UserAccess = () => {
                                                         <input 
                                                             type="text" 
                                                             className={`form-input w-full pr-10 ${formSubmitted ? 'submitted' : ''} ${whatsappError ? 'border-red-500' : ''}`} 
-                                                            placeholder="(###) ###-####" 
+                                                            placeholder="WhatsApp Number" 
                                                             maxLength={10} 
                                                             value={newUser.userWhatsappNumber} 
                                                             onChange={(e) => {
-                                                                setNewUser({...newUser, userWhatsappNumber: e.target.value.replace(/\D/g, '')});
-                                                                setWhatsappError('');
+                                                                const whatsapp = e.target.value.replace(/\D/g, '');
+                                                                setNewUser({...newUser, userWhatsappNumber: whatsapp});
+                                                                if (whatsapp) setWhatsappError('');
                                                             }} 
                                                             disabled={sameAsPhone}
                                                             required 
@@ -725,6 +779,7 @@ const UserAccess = () => {
                                                                         setSameAsPhone(e.target.checked);
                                                                         if (e.target.checked) {
                                                                             setNewUser({...newUser, userWhatsappNumber: newUser.userPhoneNumber});
+                                                                            setWhatsappError('');
                                                                         } else {
                                                                             setNewUser({...newUser, userWhatsappNumber: ''});
                                                                         }
@@ -801,11 +856,94 @@ const UserAccess = () => {
                                         <div className="grid grid-cols-2 gap-3">
                                             <div>
                                                 <label className="block text-xs font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Username *</label>
-                                                <input type="text" className={`form-input w-full ${formSubmitted ? 'submitted' : ''}`} placeholder="username" maxLength={16} value={newUser.userLogin} onChange={(e) => setNewUser({...newUser, userLogin: e.target.value})} required />
+                                                <input 
+                                                    type="text" 
+                                                    className={`form-input w-full ${formSubmitted ? 'submitted' : ''} ${usernameError ? 'border-red-500' : ''}`} 
+                                                    placeholder="username" 
+                                                    maxLength={16} 
+                                                    value={newUser.userLogin} 
+                                                    onChange={async (e) => {
+                                                        const username = e.target.value;
+                                                        setNewUser({...newUser, userLogin: username});
+                                                        setUsernameError('');
+                                                        if (username.length >= 3) {
+                                                            try {
+                                                                const response = await getRequest(`/v1/userAccess/check-field/username/${username}`);
+                                                                if (response?.exists) {
+                                                                    setUsernameError('Username already exists');
+                                                                }
+                                                            } catch (error) {
+                                                                console.error('Error checking username:', error);
+                                                            }
+                                                        }
+                                                    }} 
+                                                    required 
+                                                />
+                                                {usernameError && <p className="text-xs text-red-500 mt-1">{usernameError}</p>}
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Password *</label>
-                                                <input type="password" className={`form-input w-full ${formSubmitted ? 'submitted' : ''}`} placeholder="Password" value={newUser.userPassword} onChange={(e) => setNewUser({...newUser, userPassword: e.target.value})} required />
+                                                <div className="relative">
+                                                    <input 
+                                                        type={showPassword ? 'text' : 'password'} 
+                                                        className={`form-input w-full pr-10 ${formSubmitted ? 'submitted' : ''}`} 
+                                                        placeholder="Password" 
+                                                        value={newUser.userPassword} 
+                                                        onChange={(e) => setNewUser({...newUser, userPassword: e.target.value})} 
+                                                        required 
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-primary"
+                                                        onClick={() => setShowPassword(!showPassword)}
+                                                    >
+                                                        {showPassword ? (
+                                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                <path d="M2 2L22 22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                                                <path d="M6.71277 6.7226C3.66479 8.79527 2 12 2 12C2 12 5.63636 19 12 19C14.0503 19 15.8174 18.2734 17.2711 17.2884M11 5.05822C11.3254 5.02013 11.6588 5 12 5C18.3636 5 22 12 22 12C22 12 21.3082 13.3317 20 14.8335" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                                                <path d="M14 14.2362C13.4692 14.7112 12.7684 15.0001 12 15.0001C10.3431 15.0001 9 13.657 9 12.0001C9 11.1764 9.33193 10.4303 9.86932 9.88818" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                                            </svg>
+                                                        ) : (
+                                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                <path d="M15 12C15 13.6569 13.6569 15 12 15C10.3431 15 9 13.6569 9 12C9 10.3431 10.3431 9 12 9C13.6569 9 15 10.3431 15 12Z" stroke="currentColor" strokeWidth="1.5"/>
+                                                                <path d="M2 12C2 12 5.63636 5 12 5C18.3636 5 22 12 22 12C22 12 18.3636 19 12 19C5.63636 19 2 12 2 12Z" stroke="currentColor" strokeWidth="1.5"/>
+                                                            </svg>
+                                                        )}
+                                                    </button>
+                                                </div>
+{newUser.userPassword && !hidePasswordRules && (() => {
+                                                    const pwd = newUser.userPassword;
+                                                    const allValid = pwd.length >= 8 && /[A-Z]/.test(pwd) && /[0-9]/.test(pwd) && /[!@#$%^&*(),.?":{}|<>]/.test(pwd);
+                                                    
+                                                    if (allValid) {
+                                                        setTimeout(() => setHidePasswordRules(true), 2000);
+                                                    }
+                                                    
+                                                    return (
+                                                        <div className="mt-2">
+                                                            <style>{`
+                                                                .ReactPasswordChecklist svg {
+                                                                    width: 1.7em !important;
+                                                                    height: 1.7em !important;
+                                                                    margin-right: 0.5em !important;
+                                                                    flex-shrink: 0 !important;
+                                                                    stroke-width: 4 !important;
+                                                                }
+                                                            `}</style>
+                                                            <PasswordChecklist
+                                                                rules={["minLength", "specialChar", "number", "capital"]}
+                                                                minLength={8}
+                                                                value={pwd}
+                                                                messages={{
+                                                                    minLength: "At least 8 characters",
+                                                                    specialChar: "One special character",
+                                                                    number: "One number",
+                                                                    capital: "One uppercase letter"
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    );
+                                                })()}
                                             </div>
                                         </div>
                                     </div>
