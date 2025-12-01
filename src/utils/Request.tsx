@@ -28,14 +28,14 @@ const axiosInstance = axios.create({
 });
 
 // Function to handle GET requests
-export const getRequest = async (url: string, params = {}, headers = {}) => {
+export const getRequest = async (url: string, params = {}, headers = {}, skipToast = false) => {
     try {
         const token = localStorage.getItem('accessToken');
         const authHeaders = token ? { ...headers, Authorization: `Bearer ${token}` } : headers;
         const response = await axiosInstance.get(url, { params, headers: authHeaders });
         return response.data;
     } catch (error) {
-        handleError(error);
+        if (!skipToast) handleError(error);
         throw error;
     }
 };
