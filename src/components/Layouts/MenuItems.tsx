@@ -6,7 +6,15 @@ import withReactContent from 'sweetalert2-react-content';
 
 const MySwal = withReactContent(Swal);
 
-const renderMenu = (items) => {
+interface MenuItem {
+    menuTitle: string;
+    menuType: number;
+    menuRoute?: string;
+    menuSvg?: string;
+    children?: MenuItem[];
+}
+
+const renderMenu = (items: MenuItem[]): JSX.Element[] => {
     return items.map(item => (
         (item.menuType == 0) ? (
             <div key={item.menuTitle}>
@@ -16,7 +24,7 @@ const renderMenu = (items) => {
                     </svg>
                     <span>{item.menuTitle}</span>
                 </h2>
-                {renderMenu(item.children)}
+                {item.children && renderMenu(item.children)}
             </div>
         ) : (
             <li key={item.menuTitle} className="nav-item">
@@ -40,7 +48,7 @@ const renderMenu = (items) => {
 const ItemList: React.FC = () => {
     const navigate = useNavigate();
 
-    const [menuData, setMenuData] = useState([]);
+    const [menuData, setMenuData] = useState<MenuItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [hasBiometric, setHasBiometric] = useState<boolean | null>(null);
@@ -85,7 +93,7 @@ const ItemList: React.FC = () => {
     }, []);
 
     // Filter menu items based on biometric status
-    const filterMenuItems = (items) => {
+    const filterMenuItems = (items: MenuItem[]): MenuItem[] => {
         return items.filter(item => {
             // Hide "Register Face" menu if user already has biometric
             if (hasBiometric && item.menuRoute === '/attendance/register-face') {

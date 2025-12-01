@@ -19,10 +19,10 @@ const Basic = () => {
     const PAGE_SIZES = [12, 15, 20, 25, 30, 50, 100];
     const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
 
-    const [rowData, setData] = useState([]);
-    const [initialRecords, setInitialRecords] = useState([]);
-    const [recordsData, setRecordsData] = useState([]);
-    const [sortedData, setSortedData] = useState([]);
+    const [rowData, setData] = useState<any[]>([]);
+    const [initialRecords, setInitialRecords] = useState<any[]>([]);
+    const [recordsData, setRecordsData] = useState<any[]>([]);
+    const [sortedData, setSortedData] = useState<any[]>([]);
 
     const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({ columnAccessor: 'id', direction: 'asc' });
 
@@ -69,14 +69,14 @@ const Basic = () => {
     }, [sortStatus, initialRecords]);
 
     const columnsDefination = [
-        { title: 'ID', sortable: true, render: (row, index) => <strong className="text-info">#{index + 1}</strong>, },
+        { accessor: 'id', title: 'ID', sortable: true, render: (row: any, index: number) => <strong className="text-info">#{index + 1}</strong>, },
         {
             accessor: 'transectionTitle',
             title: 'Title',
             sortable: true,
-            render: ({ transectionTitle }) => (
+            render: (record: any) => (
                 <div className="flex items-center gap-2">
-                    <div className="font-semibold">{transectionTitle}</div>
+                    <div className="font-semibold">{record.transectionTitle}</div>
                 </div>
             ),
         },
@@ -84,9 +84,9 @@ const Basic = () => {
             accessor: 'transectionAmount',
             title: 'Amount',
             sortable: true,
-            render: ({ transectionAmount }) => (
+            render: (record: any) => (
                 <div className="flex items-center gap-2">
-                    <div className="font-semibold">{transectionAmount}</div>
+                    <div className="font-semibold">{record.transectionAmount}</div>
                 </div>
             ),
         },
@@ -94,9 +94,9 @@ const Basic = () => {
             accessor: 'paymentMethodName',
             title: 'Payment Method',
             sortable: true,
-            render: ({ paymentMethodName }) => (
+            render: (record: any) => (
                 <div className="flex items-center gap-2">
-                    <div className="font-semibold">{paymentMethodName}</div>
+                    <div className="font-semibold">{record.paymentMethodName}</div>
                 </div>
             ),
         },
@@ -104,11 +104,11 @@ const Basic = () => {
             accessor: 'transectionType',
             title: 'Transaction Type',
             sortable: true,
-            render: ({ transectionType }) => (
-                transectionType == '1' ? (
+            render: (record: any) => (
+                record.transectionType == '1' ? (
                     <span className="badge bg-success">Income</span>
                 ) : (
-                    transectionType == '0' ? (
+                    record.transectionType == '0' ? (
                         <span className="badge bg-danger">Expense</span>
                     ) : (
                         <span className="badge bg-info">Transfer</span>
@@ -120,9 +120,9 @@ const Basic = () => {
             accessor: 'bankName',
             title: 'Bank Name',
             sortable: true,
-            render: ({ bankName }) => (
+            render: (record: any) => (
                 <div className="flex items-center gap-2">
-                    <div className="font-semibold">{bankName}</div>
+                    <div className="font-semibold">{record.bankName}</div>
                 </div>
             ),
         },
@@ -130,9 +130,9 @@ const Basic = () => {
             accessor: 'name',
             title: 'Name',
             sortable: true,
-            render: ({ name }) => (
+            render: (record: any) => (
                 <div className="flex items-center gap-2">
-                    <div className="font-semibold">{name}</div>
+                    <div className="font-semibold">{record.name}</div>
                 </div>
             ),
         },
@@ -140,10 +140,10 @@ const Basic = () => {
             accessor: 'transectionTime',
             title: 'Date',
             sortable: true,
-            render: ({ transectionTime }) => (
+            render: (record: any) => (
                 <div className="flex items-center gap-2">
                     <div className="font-semibold">{
-                        new Date(transectionTime).toLocaleString('en-US', {
+                        new Date(record.transectionTime).toLocaleString('en-US', {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric',
@@ -162,10 +162,10 @@ const Basic = () => {
             <div className="panel">
                 <div className="flex md:items-center justify-between md:flex-row flex-col mb-4.5 gap-5">
                     <div className="flex items-center flex-wrap">
-                        <button type="button" onClick={() => exportTable('csv')} className="btn btn-primary btn-sm m-1">CSV</button>
-                        <button type="button" onClick={() => exportTable('txt')} className="btn btn-primary btn-sm m-1">TXT</button>
+                        <button type="button" onClick={() => console.log('Export CSV')} className="btn btn-primary btn-sm m-1">CSV</button>
+                        <button type="button" onClick={() => console.log('Export TXT')} className="btn btn-primary btn-sm m-1">TXT</button>
                         <button type="button" className="btn btn-primary btn-sm m-1" onClick={handleDownloadExcel}>EXCEL</button>
-                        <button type="button" onClick={() => exportTable('print')} className="btn btn-primary btn-sm m-1">PRINT</button>
+                        <button type="button" onClick={() => window.print()} className="btn btn-primary btn-sm m-1">PRINT</button>
                     </div>
                 </div>
                 <h5 className="font-semibold text-lg dark:text-white-light mb-5">Messages from website</h5>

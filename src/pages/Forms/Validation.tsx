@@ -17,9 +17,9 @@ const Validation = () => {
         "Content-Type": "application/json",
         "authorization": "Bearer " + localStorage.getItem('accessToken')
     };
-    const [banks, setBanks] = useState([]);
-    const [users, setUsers] = useState([]);
-    const [paymentMethods, setPaymentMethods] = useState([]);
+    const [banks, setBanks] = useState<any[]>([]);
+    const [users, setUsers] = useState<any[]>([]);
+    const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
     const [verifyModal, setVerify] = useState(false);
     const [registerModal, setRegister] = useState(false);
     const [qrSrc, setQrSrc] = useState("");
@@ -217,7 +217,7 @@ const Validation = () => {
         code: Yup.number().min(6).required('Please Enter the code'),
     });
 
-    const MaskedInputField = ({ field, form, mask, ...props }) => (
+    const MaskedInputField = ({ field, form, mask, ...props }: any) => (
         <MaskedInput
             {...field}
             {...props}
@@ -307,7 +307,7 @@ const Validation = () => {
                                                     name="bank"
                                                     className="form-select"
                                                     value={values.bank}
-                                                    onChange={(e) => {
+                                                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                                                         setFieldValue("bank", e.target.value);
                                                         getPaymentMethods(e.target.value);
                                                     }}
@@ -556,7 +556,7 @@ const Validation = () => {
                                                             id="contactId"
                                                             placeholder="Select person"
                                                             options={contacts}
-                                                            onChange={(selectedOption) => setFieldValue('contactId', selectedOption.value)}
+                                                            onChange={(selectedOption) => setFieldValue('contactId', selectedOption?.value)}
                                                         />
                                                         {submitCount && errors.contactId ? (
                                                             <div className="text-danger mt-1">{errors.contactId}</div>
@@ -572,7 +572,7 @@ const Validation = () => {
                                                             id="linkType"
                                                             placeholder="Select payment type"
                                                             options={paymentTypes}
-                                                            onChange={(selectedOption) => setFieldValue('linkType', selectedOption.value)}
+                                                            onChange={(selectedOption) => setFieldValue('linkType', selectedOption?.value)}
                                                         />
                                                         {submitCount && errors.linkType ? (
                                                             <div className="text-danger mt-1">{errors.linkType}</div>
@@ -614,7 +614,7 @@ const Validation = () => {
                                                                 Email
                                                             </label>
                                                         </div>
-                                                        {submitCount && errors.linkNotify ? <div className="text-danger mt-1">{errors.linkNotify}</div> : ''}
+                                                        {submitCount && errors.linkNotify ? <div className="text-danger mt-1">{String(errors.linkNotify)}</div> : ''}
                                                     </div>
                                                 </div>
 

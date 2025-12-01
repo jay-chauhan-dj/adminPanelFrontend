@@ -26,9 +26,9 @@ const UserAccess = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [sameAsPhone, setSameAsPhone] = useState(false);
     const [hidePasswordRules, setHidePasswordRules] = useState(false);
-    const [currentRole, setCurrentRole] = useState({ id: null, role: '', access_area: [] });
-    const [currentUser, setCurrentUser] = useState({ userId: null, role: '', customAreas: [], roleAreas: [] });
-    const [newUser, setNewUser] = useState({ userFirstName: '', userLastName: '', userEmail: '', userPhoneNumber: '', userWhatsappNumber: '', userAddress: { 'address-1': '', 'address-2': '', landmark: '', city: '', state: '', country: '', 'postal-code': '' }, userLogin: '', userPassword: '', userRole: '', customAreas: [], roleAreas: [] });
+    const [currentRole, setCurrentRole] = useState<{ id: number | null; role: string; access_area: string[] }>({ id: null, role: '', access_area: [] });
+    const [currentUser, setCurrentUser] = useState<{ userId: number | null; role: string; customAreas: string[]; roleAreas: string[] }>({ userId: null, role: '', customAreas: [], roleAreas: [] });
+    const [newUser, setNewUser] = useState<{ userFirstName: string; userLastName: string; userEmail: string; userPhoneNumber: string; userWhatsappNumber: string; userSlackIdentifier: string; userAddress: { 'address-1': string; 'address-2': string; landmark: string; city: string; state: string; country: string; 'postal-code': string }; userLogin: string; userPassword: string; userRole: string; customAreas: string[]; roleAreas: string[] }>({ userFirstName: '', userLastName: '', userEmail: '', userPhoneNumber: '', userWhatsappNumber: '', userSlackIdentifier: '', userAddress: { 'address-1': '', 'address-2': '', landmark: '', city: '', state: '', country: '', 'postal-code': '' }, userLogin: '', userPassword: '', userRole: '', customAreas: [], roleAreas: [] });
 
     useEffect(() => {
         fetchUsers();

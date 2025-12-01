@@ -148,41 +148,41 @@ const WebsiteContact = () => {
                                 accessor: 'id',
                                 title: 'ID',
                                 sortable: true,
-                                render: ({ id }) => <strong className="text-info">#{id}</strong>
+                                render: (record: any) => <strong className="text-info">#{(record as any).id}</strong>
                             },
                             {
                                 accessor: 'name',
                                 title: 'Name',
                                 sortable: true,
-                                render: ({ name }) => <div className="font-semibold">{name}</div>
+                                render: (record: any) => <div className="font-semibold">{record.name}</div>
                             },
                             {
                                 accessor: 'email',
                                 title: 'Email',
                                 sortable: true,
-                                render: ({ email }) => (
-                                    <span className="badge bg-primary cursor-pointer hover:opacity-80" onClick={(e) => copyToClipboard(email, e)}>{email}</span>
+                                render: (record: any) => (
+                                    <span className="badge bg-primary cursor-pointer hover:opacity-80" onClick={(e) => copyToClipboard(record.email, e)}>{record.email}</span>
                                 )
                             },
                             {
                                 accessor: 'phone',
                                 title: 'Phone',
                                 sortable: true,
-                                render: ({ phone }) => (
-                                    <span className="badge bg-success cursor-pointer hover:opacity-80" onClick={(e) => handlePhoneClick(phone || '', e)}>{phone || '-'}</span>
+                                render: (record: any) => (
+                                    <span className="badge bg-success cursor-pointer hover:opacity-80" onClick={(e) => handlePhoneClick(record.phone || '', e)}>{record.phone || '-'}</span>
                                 )
                             },
                             {
                                 accessor: 'subject',
                                 title: 'Subject',
                                 sortable: true,
-                                render: ({ message }) => <div>{parseMessage(message).subject}</div>
+                                render: (record: any) => <div>{parseMessage(record.message).subject}</div>
                             },
                             {
                                 accessor: 'created_at',
                                 title: 'Date',
                                 sortable: true,
-                                render: ({ created_at }) => <div className="whitespace-nowrap">{formatDate(created_at)}</div>
+                                render: (record: any) => <div className="whitespace-nowrap">{formatDate(record.created_at)}</div>
                             }
                         ]}
                         totalRecords={filteredContacts.length}

@@ -17,8 +17,15 @@ const fetchRoutes = async () => {
     return response;
 };
 
+interface RouteConfig {
+    path: string;
+    componentLocation: string;
+    requiredAccess?: string;
+    layout?: string;
+}
+
 const DynamicRoute = () => {
-    const [routes, setRoutes] = useState([]);
+    const [routes, setRoutes] = useState<RouteConfig[]>([]);
 
     useEffect(() => {
         const fetchRoutesData = async () => {
@@ -33,8 +40,8 @@ const DynamicRoute = () => {
         return null; // or a loading indicator
     }
 
-    const finalRoutes = routes.map((route) => {
-            let Component = componentMap[route.componentLocation];
+    const finalRoutes = routes.map((route: RouteConfig) => {
+            let Component = componentMap[route.componentLocation as keyof typeof componentMap];
 
             if (!Component) {
                 return null; // Handle case where component is not found in the map
@@ -62,7 +69,7 @@ const DynamicRoute = () => {
             path: '/auth/login',
             element: <LoginCover />
         },
-        ...finalRoutes,
+        ...finalRoutes.filter((route): route is { path: string; element: JSX.Element } => route !== null),
         {
             path: '/*',
             element: <Error404 />

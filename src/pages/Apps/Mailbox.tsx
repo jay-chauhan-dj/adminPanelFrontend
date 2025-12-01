@@ -15,8 +15,8 @@ import { getRequest, postRequest } from '../../utils/Request';
 const Mailbox = () => {
     const dispatch = useDispatch();
 
-    const [mailList, setMailList] = useState([]);
-    const [companyEmails, setCompanyEmails] = useState([]);
+    const [mailList, setMailList] = useState<any[]>([]);
+    const [companyEmails, setCompanyEmails] = useState<any[]>([]);
 
     const headers = {
         "Content-Type": "application/json",
@@ -126,7 +126,7 @@ const Mailbox = () => {
 
     const setGroup = (group: any) => {
         if (ids.length) {
-            let items = mailList.filter((d: any) => ids.includes(d.id));
+            let items: any[] = mailList.filter((d: any) => ids.includes(d.id));
             for (let item of items) {
                 item.group = group;
             }

@@ -11,7 +11,7 @@ import Messages from './Messages';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const MySwal = withReactContent(Swal);
-const errorToster = (message) => {
+const errorToster = (message: string) => {
     MySwal.fire({
         title: message,
         toast: true,
@@ -123,7 +123,7 @@ const Chat = () => {
                     path: '/assets/images/user-profile.jpeg',
                     time: '',
                     preview: '',
-                    messages: {},
+                    messages: [],
                     active: false
                 };
             }
@@ -220,7 +220,7 @@ const Chat = () => {
     };
 
     const getCurrentFormattedDate = () => {
-        const options = { day: '2-digit', month: 'short', year: 'numeric' };
+        const options: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'short', year: 'numeric' };
         return new Date().toLocaleDateString('en-GB', options).replace(/ 20/g, ', 20');
     }
 
