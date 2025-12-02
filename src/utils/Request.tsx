@@ -87,7 +87,7 @@ export const login = async (username: any, password: any, otp: any, loginKey: an
         const accessToken = response.data.accessToken;
         const refreshToken = response.data.refreshToken;
         const email = response.data.email;
-        const role = response.data.role || 'User';
+        const role = response.data.role || 'user';
         const access = response.data.access || [];
         
         localStorage.setItem('accessToken', accessToken);
