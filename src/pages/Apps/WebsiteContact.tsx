@@ -22,7 +22,7 @@ const WebsiteContact = () => {
     const PAGE_SIZES = [10, 15, 20, 30, 50, 100];
     const [pageSize, setPageSize] = useState(15);
     const [recordsData, setRecordsData] = useState<any>([]);
-    const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({ columnAccessor: 'id', direction: 'asc' });
+    const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({ columnAccessor: 'id', direction: 'desc' });
 
     useEffect(() => {
         fetchContacts();

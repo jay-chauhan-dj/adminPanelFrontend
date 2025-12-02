@@ -15,16 +15,48 @@ const ClockInOut = () => {
     const [action, setAction] = useState<'clock_in' | 'clock_out'>('clock_in');
     const [lastAttendance, setLastAttendance] = useState<any>(null);
     const [hasBiometric, setHasBiometric] = useState<boolean | null>(null);
+    const [onBreak, setOnBreak] = useState(false);
+    const [breakLoading, setBreakLoading] = useState(false);
+    const [elapsedTime, setElapsedTime] = useState('00:00:00');
+    const [timerKey, setTimerKey] = useState(0);
+    const [clockInTimestamp, setClockInTimestamp] = useState<number | null>(null);
 
     const API_BASE_URL = import.meta.env.REACT_APP_API_BASE || 'http://localhost:3000';
 
     useEffect(() => {
         dispatch(setPageTitle('Clock In/Out'));
         checkBiometric();
+        fetchTodayAttendance();
         startCamera();
         getLocation();
         return () => stopCamera();
     }, []);
+
+    useEffect(() => {
+        if (!lastAttendance?.clock_in_time || lastAttendance?.clock_out_time) {
+            setElapsedTime('00:00:00');
+            setClockInTimestamp(null);
+            return;
+        }
+        
+        if (!clockInTimestamp) {
+            setClockInTimestamp(Date.now());
+        }
+        
+        const updateTimer = () => {
+            if (!clockInTimestamp) return;
+            const diff = Math.floor((Date.now() - clockInTimestamp) / 1000);
+            const hours = Math.floor(diff / 3600);
+            const minutes = Math.floor((diff % 3600) / 60);
+            const seconds = diff % 60;
+            setElapsedTime(`${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`);
+        };
+        
+        updateTimer();
+        const interval = setInterval(updateTimer, 1000);
+        
+        return () => clearInterval(interval);
+    }, [lastAttendance, clockInTimestamp]);
 
     const checkBiometric = async () => {
         try {
@@ -38,6 +70,24 @@ const ClockInOut = () => {
             }
         } catch (error) {
             console.error('Failed to check biometric status');
+        }
+    };
+
+    const fetchTodayAttendance = async () => {
+        try {
+            const token = localStorage.getItem('accessToken');
+            const response = await fetch(`${API_BASE_URL}/v1/attendance/today`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            if (data.success && data.attendance) {
+                setLastAttendance(data.attendance);
+                if (data.attendance.break_in_time && !data.attendance.break_out_time) {
+                    setOnBreak(true);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to fetch today attendance');
         }
     };
 
@@ -121,6 +171,12 @@ const ClockInOut = () => {
         return null;
     };
 
+    const formatTime = (timeString: string) => {
+        if (!timeString) return 'N/A';
+        const date = new Date(timeString);
+        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+    };
+
     const handleClockAction = async (selectedAction: 'clock_in' | 'clock_out') => {
         if (!location) {
             Swal.fire('Error', 'Location not available. Please enable location services.', 'error');
@@ -154,6 +210,12 @@ const ClockInOut = () => {
             const data = await response.json();
 
             if (response.ok && data.success) {
+                if (selectedAction === 'clock_in') {
+                    setClockInTimestamp(Date.now());
+                } else {
+                    setClockInTimestamp(null);
+                    setOnBreak(false);
+                }
                 setLastAttendance(data.attendance);
                 Swal.fire('Success', data.message, 'success');
             } else {
@@ -177,6 +239,44 @@ const ClockInOut = () => {
             Swal.fire('Error', 'Failed to connect to attendance system', 'error');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleBreak = async () => {
+        if (!location) {
+            Swal.fire('Error', 'Location not available. Please enable location services.', 'error');
+            return;
+        }
+
+        setBreakLoading(true);
+        try {
+            const token = localStorage.getItem('accessToken');
+            const response = await fetch(`${API_BASE_URL}/v1/attendance/break`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    action: onBreak ? 'break_out' : 'break_in',
+                    latitude: location.latitude,
+                    longitude: location.longitude
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                setOnBreak(!onBreak);
+                setLastAttendance(data.attendance);
+                Swal.fire('Success', data.message, 'success');
+            } else {
+                Swal.fire('Error', data.error || 'Failed to process break', 'error');
+            }
+        } catch (error) {
+            Swal.fire('Error', 'Failed to connect to attendance system', 'error');
+        } finally {
+            setBreakLoading(false);
         }
     };
 
@@ -215,36 +315,56 @@ const ClockInOut = () => {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <button
-                                type="button"
-                                className="btn btn-success btn-lg"
-                                onClick={() => handleClockAction('clock_in')}
-                                disabled={loading || !location || !stream}
-                            >
-                                {loading && action === 'clock_in' ? (
-                                    <span className="inline-flex items-center">
-                                        <span className="animate-spin border-2 border-white border-l-transparent rounded-full w-5 h-5 mr-2"></span>
-                                        Processing...
-                                    </span>
-                                ) : (
-                                    'Clock In'
-                                )}
-                            </button>
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <button
+                                    type="button"
+                                    className="btn btn-success btn-lg"
+                                    onClick={() => handleClockAction('clock_in')}
+                                    disabled={loading || !location || !stream || !hasBiometric}
+                                >
+                                    {loading && action === 'clock_in' ? (
+                                        <span className="inline-flex items-center">
+                                            <span className="animate-spin border-2 border-white border-l-transparent rounded-full w-5 h-5 mr-2"></span>
+                                            Processing...
+                                        </span>
+                                    ) : (
+                                        'Clock In'
+                                    )}
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className="btn btn-danger btn-lg"
+                                    onClick={() => handleClockAction('clock_out')}
+                                    disabled={loading || !location || !stream || !hasBiometric}
+                                >
+                                    {loading && action === 'clock_out' ? (
+                                        <span className="inline-flex items-center">
+                                            <span className="animate-spin border-2 border-white border-l-transparent rounded-full w-5 h-5 mr-2"></span>
+                                            Processing...
+                                        </span>
+                                    ) : (
+                                        'Clock Out'
+                                    )}
+                                </button>
+                            </div>
 
                             <button
                                 type="button"
-                                className="btn btn-danger btn-lg"
-                                onClick={() => handleClockAction('clock_out')}
-                                disabled={loading || !location || !stream}
+                                className={`btn btn-lg w-full ${onBreak ? 'btn-info' : 'btn-warning'}`}
+                                onClick={handleBreak}
+                                disabled={breakLoading || !location || !hasBiometric}
                             >
-                                {loading && action === 'clock_out' ? (
+                                {breakLoading ? (
                                     <span className="inline-flex items-center">
                                         <span className="animate-spin border-2 border-white border-l-transparent rounded-full w-5 h-5 mr-2"></span>
                                         Processing...
                                     </span>
+                                ) : onBreak ? (
+                                    'Break End'
                                 ) : (
-                                    'Clock Out'
+                                    'Break Start'
                                 )}
                             </button>
                         </div>
@@ -309,16 +429,46 @@ const ClockInOut = () => {
 
                     {lastAttendance && (
                         <div className="panel">
-                            <h5 className="font-semibold text-lg mb-4">Last Attendance</h5>
-                            <div className="space-y-2">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600 dark:text-gray-400">Action</span>
-                                    <span className="font-semibold capitalize">{lastAttendance.action.replace('_', ' ')}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600 dark:text-gray-400">Time</span>
-                                    <span className="font-semibold">{lastAttendance.clock_in_time || lastAttendance.clock_out_time || lastAttendance.timestamp}</span>
-                                </div>
+                            <h5 className="font-semibold text-lg mb-4">Today's Attendance</h5>
+                            <div className="space-y-3">
+                                {lastAttendance.clock_in_time && !lastAttendance.clock_out_time && (
+                                    <div className="p-5 bg-primary rounded-lg text-white text-center">
+                                        <div className="text-xs uppercase tracking-widest mb-3 opacity-80 font-semibold">Working Time</div>
+                                        <div className="text-5xl font-bold font-mono tabular-nums">{elapsedTime}</div>
+                                    </div>
+                                )}
+                                {lastAttendance.clock_in_time && (
+                                    <div className="p-3 bg-green-50 dark:bg-green-900/10 rounded">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-gray-600 dark:text-gray-400 text-sm">Clock In</span>
+                                            <span className="font-semibold text-green-600 dark:text-green-400">{formatTime(lastAttendance.clock_in_time)}</span>
+                                        </div>
+                                    </div>
+                                )}
+                                {lastAttendance.clock_out_time && (
+                                    <div className="p-3 bg-red-50 dark:bg-red-900/10 rounded">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-gray-600 dark:text-gray-400 text-sm">Clock Out</span>
+                                            <span className="font-semibold text-red-600 dark:text-red-400">{formatTime(lastAttendance.clock_out_time)}</span>
+                                        </div>
+                                    </div>
+                                )}
+                                {lastAttendance.break_in_time && (
+                                    <div className="p-3 bg-yellow-50 dark:bg-yellow-900/10 rounded">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-gray-600 dark:text-gray-400 text-sm">Break Start</span>
+                                            <span className="font-semibold text-yellow-600 dark:text-yellow-400">{formatTime(lastAttendance.break_in_time)}</span>
+                                        </div>
+                                    </div>
+                                )}
+                                {lastAttendance.break_out_time && (
+                                    <div className="p-3 bg-blue-50 dark:bg-blue-900/10 rounded">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-gray-600 dark:text-gray-400 text-sm">Break End</span>
+                                            <span className="font-semibold text-blue-600 dark:text-blue-400">{formatTime(lastAttendance.break_out_time)}</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
