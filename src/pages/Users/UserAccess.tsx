@@ -7,7 +7,7 @@ import PasswordChecklist from 'react-password-checklist';
 const UserAccess = () => {
     const [users, setUsers] = useState<any[]>([]);
     const [roles, setRoles] = useState<any[]>([]);
-    const [availableAreas, setAvailableAreas] = useState<string[]>([]);
+    const [menuItems, setMenuItems] = useState<any[]>([]);
     const [showModal, setShowModal] = useState(false);
     const [showUserModal, setShowUserModal] = useState(false);
     const [showAddUserModal, setShowAddUserModal] = useState(false);
@@ -26,14 +26,14 @@ const UserAccess = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [sameAsPhone, setSameAsPhone] = useState(false);
     const [hidePasswordRules, setHidePasswordRules] = useState(false);
-    const [currentRole, setCurrentRole] = useState<{ id: number | null; role: string; access_area: string[] }>({ id: null, role: '', access_area: [] });
-    const [currentUser, setCurrentUser] = useState<{ userId: number | null; role: string; customAreas: string[]; roleAreas: string[] }>({ userId: null, role: '', customAreas: [], roleAreas: [] });
-    const [newUser, setNewUser] = useState<{ userFirstName: string; userLastName: string; userEmail: string; userPhoneNumber: string; userWhatsappNumber: string; userSlackIdentifier: string; userAddress: { 'address-1': string; 'address-2': string; landmark: string; city: string; state: string; country: string; 'postal-code': string }; userLogin: string; userPassword: string; userRole: string; customAreas: string[]; roleAreas: string[] }>({ userFirstName: '', userLastName: '', userEmail: '', userPhoneNumber: '', userWhatsappNumber: '', userSlackIdentifier: '', userAddress: { 'address-1': '', 'address-2': '', landmark: '', city: '', state: '', country: '', 'postal-code': '' }, userLogin: '', userPassword: '', userRole: '', customAreas: [], roleAreas: [] });
+    const [currentRole, setCurrentRole] = useState<{ id: number | null; role: string; description: string; access_ids: number[] }>({ id: null, role: '', description: '', access_ids: [] });
+    const [currentUser, setCurrentUser] = useState<{ userId: number | null; roleId: number | null; customAreas: number[]; roleAreas: number[] }>({ userId: null, roleId: null, customAreas: [], roleAreas: [] });
+    const [newUser, setNewUser] = useState<{ userFirstName: string; userLastName: string; userEmail: string; userPhoneNumber: string; userWhatsappNumber: string; userSlackIdentifier: string; userAddress: { 'address-1': string; 'address-2': string; landmark: string; city: string; state: string; country: string; 'postal-code': string }; userLogin: string; userPassword: string; userRole: number | null; customAreas: number[]; roleAreas: number[] }>({ userFirstName: '', userLastName: '', userEmail: '', userPhoneNumber: '', userWhatsappNumber: '', userSlackIdentifier: '', userAddress: { 'address-1': '', 'address-2': '', landmark: '', city: '', state: '', country: '', 'postal-code': '' }, userLogin: '', userPassword: '', userRole: null, customAreas: [], roleAreas: [] });
 
     useEffect(() => {
         fetchUsers();
         fetchRoles();
-        fetchAvailableAreas();
+        fetchMenuItems();
     }, []);
 
     useEffect(() => {
@@ -45,19 +45,15 @@ const UserAccess = () => {
         }
     }, [newUser.userPassword, hidePasswordRules]);
 
-    const fetchAvailableAreas = async () => {
-        // Only your actual sidebar pages
-        setAvailableAreas([
-            'dashboard',
-            'chat',
-            'mailbox',
-            'payment',
-            'money',
-            'nas',
-            'websiteContact',
-            'users',
-            'appManagement'
-        ]);
+    const fetchMenuItems = async () => {
+        try {
+            const response = await getRequest('/v1/userAccess/menu-items');
+            if (response?.data && Array.isArray(response.data)) {
+                setMenuItems(response.data);
+            }
+        } catch (error: any) {
+            console.error('Error fetching menu items:', error);
+        }
     };
 
     const fetchUsers = async () => {
@@ -94,12 +90,12 @@ const UserAccess = () => {
         }
     };
 
-    const handleCheckbox = (area: string) => {
+    const handleCheckbox = (menuId: number) => {
         setCurrentRole(prev => ({
             ...prev,
-            access_area: prev.access_area.includes(area)
-                ? prev.access_area.filter((a: string) => a !== area)
-                : [...prev.access_area, area]
+            access_ids: prev.access_ids.includes(menuId)
+                ? prev.access_ids.filter((id: number) => id !== menuId)
+                : [...prev.access_ids, menuId]
         }));
     };
 
@@ -112,7 +108,7 @@ const UserAccess = () => {
                 await postRequest('/v1/userAccess/roles', currentRole);
             }
             setShowModal(false);
-            setCurrentRole({ id: null, role: '', access_area: [] });
+            setCurrentRole({ id: null, role: '', description: '', access_ids: [] });
             await fetchRoles();
             await fetchUsers();
         } finally {
@@ -121,13 +117,13 @@ const UserAccess = () => {
     };
 
     const handleUserRoleUpdate = async () => {
-        const selectedRole = roles.find(r => r.role === currentUser.role);
-        const roleAreas = selectedRole ? selectedRole.access_area : [];
-        const extraAreas = currentUser.customAreas.filter(area => !roleAreas.includes(area));
+        const selectedRole = roles.find(r => r.id === currentUser.roleId);
+        const roleAreas = selectedRole ? selectedRole.access_ids : [];
+        const extraAreas = currentUser.customAreas.filter(id => !roleAreas.includes(id));
         
-        await putRequest(`/v1/userAccess/users/${currentUser.userId}`, { role: currentUser.role, customAreas: extraAreas });
+        await putRequest(`/v1/userAccess/users/${currentUser.userId}`, { roleId: currentUser.roleId, customAreas: extraAreas });
         setShowUserModal(false);
-        setCurrentUser({ userId: null, role: '', customAreas: [], roleAreas: [] });
+        setCurrentUser({ userId: null, roleId: null, customAreas: [], roleAreas: [] });
         fetchUsers();
     };
 
@@ -148,23 +144,23 @@ const UserAccess = () => {
     };
 
     const openUserModal = (user: any) => {
-        const selectedRole = roles.find(r => r.role === user.userRole);
-        const roleAreas = selectedRole ? selectedRole.access_area : [];
+        const selectedRole = roles.find(r => r.id === user.userRole || r.role === user.userRoleName);
+        const roleAreas = selectedRole ? selectedRole.access_ids : [];
         setCurrentUser({ 
             userId: user.userId, 
-            role: user.userRole, 
-            customAreas: user.access_area || [],
+            roleId: selectedRole?.id || null, 
+            customAreas: user.customAreas || [],
             roleAreas: roleAreas
         });
         setShowUserModal(true);
     };
 
-    const handleUserCheckbox = (area: string) => {
+    const handleUserCheckbox = (menuId: number) => {
         setCurrentUser(prev => ({
             ...prev,
-            customAreas: prev.customAreas.includes(area)
-                ? prev.customAreas.filter((a: string) => a !== area)
-                : [...prev.customAreas, area]
+            customAreas: prev.customAreas.includes(menuId)
+                ? prev.customAreas.filter((id: number) => id !== menuId)
+                : [...prev.customAreas, menuId]
         }));
     };
 
@@ -181,14 +177,14 @@ const UserAccess = () => {
     };
 
     const openAddModal = () => {
-        setCurrentRole({ id: null, role: '', access_area: [] });
+        setCurrentRole({ id: null, role: '', description: '', access_ids: [] });
         setEditMode(false);
         setShowModal(true);
     };
 
     //  Add User Modal Handlers
     const openAddUserModal = () => {
-        setNewUser({ userFirstName: '', userLastName: '', userEmail: '', userPhoneNumber: '', userWhatsappNumber: '', userSlackIdentifier: '', userAddress: { 'address-1': '', 'address-2': '', landmark: '', city: '', state: '', country: '', 'postal-code': '' }, userLogin: '', userPassword: '', userRole: '', customAreas: [], roleAreas: [] });
+        setNewUser({ userFirstName: '', userLastName: '', userEmail: '', userPhoneNumber: '', userWhatsappNumber: '', userSlackIdentifier: '', userAddress: { 'address-1': '', 'address-2': '', landmark: '', city: '', state: '', country: '', 'postal-code': '' }, userLogin: '', userPassword: '', userRole: null, customAreas: [], roleAreas: [] });
         setFormSubmitted(false);
         setIsPincodeInDb(false);
         setEmailError('');
@@ -309,7 +305,7 @@ const UserAccess = () => {
             };
             await postRequest('/v1/userAccess/users', userData);
             setShowAddUserModal(false);
-            setNewUser({ userFirstName: '', userLastName: '', userEmail: '', userPhoneNumber: '', userWhatsappNumber: '', userSlackIdentifier: '', userAddress: { 'address-1': '', 'address-2': '', landmark: '', city: '', state: '', country: '', 'postal-code': '' }, userLogin: '', userPassword: '', userRole: '', customAreas: [], roleAreas: [] });
+            setNewUser({ userFirstName: '', userLastName: '', userEmail: '', userPhoneNumber: '', userWhatsappNumber: '', userSlackIdentifier: '', userAddress: { 'address-1': '', 'address-2': '', landmark: '', city: '', state: '', country: '', 'postal-code': '' }, userLogin: '', userPassword: '', userRole: null, customAreas: [], roleAreas: [] });
             setFormSubmitted(false);
             setIsPincodeInDb(false);
             await fetchUsers();
@@ -322,12 +318,12 @@ const UserAccess = () => {
 
 
 
-    const handleNewUserCheckbox = (area: string) => {
+    const handleNewUserCheckbox = (menuId: number) => {
         setNewUser(prev => ({
             ...prev,
-            customAreas: prev.customAreas.includes(area)
-                ? prev.customAreas.filter((a: string) => a !== area)
-                : [...prev.customAreas, area]
+            customAreas: prev.customAreas.includes(menuId)
+                ? prev.customAreas.filter((id: number) => id !== menuId)
+                : [...prev.customAreas, menuId]
         }));
     };
 
@@ -457,7 +453,7 @@ const UserAccess = () => {
                                             <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" strokeWidth="1.5"/>
                                             <path d="M12 22C17 22 22 17 22 12C22 7 17 2 12 2C7 2 2 7 2 12C2 17 7 22 12 22Z" stroke="currentColor" strokeWidth="1.5"/>
                                         </svg>
-                                        {user.userRole || 'No Role'}
+                                        {user.userRoleName || user.userRole || 'No Role'}
                                     </span>
                                 </div>
                                 <div className="mb-3">
@@ -601,21 +597,32 @@ const UserAccess = () => {
                             </div>
 
                             <div>
+                                <label className="block text-sm font-semibold mb-2">Description</label>
+                                <input
+                                    type="text"
+                                    className="form-input w-full mb-4"
+                                    placeholder="Role description (optional)"
+                                    value={currentRole.description}
+                                    onChange={(e) => setCurrentRole({ ...currentRole, description: e.target.value })}
+                                />
+                            </div>
+
+                            <div>
                                 <label className="block text-sm font-semibold mb-3">Permissions</label>
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                    {availableAreas.map((area) => (
-                                        <label key={area} className={`flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                                            currentRole.access_area.includes(area) 
+                                    {menuItems.map((item) => (
+                                        <label key={item.id} className={`flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                                            currentRole.access_ids.includes(item.id) 
                                                 ? 'border-primary bg-primary/5' 
                                                 : 'border-gray-200 dark:border-gray-700 hover:border-primary/50'
                                         }`}>
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox text-primary"
-                                                checked={currentRole.access_area.includes(area)}
-                                                onChange={() => handleCheckbox(area)}
+                                                checked={currentRole.access_ids.includes(item.id)}
+                                                onChange={() => handleCheckbox(item.id)}
                                             />
-                                            <span className="ml-2 capitalize font-medium text-sm">{area}</span>
+                                            <span className="ml-2 capitalize font-medium text-sm">{item.menuItemName}</span>
                                         </label>
                                     ))}
                                 </div>
@@ -957,40 +964,43 @@ const UserAccess = () => {
                                         </h4>
                                         <div className="mb-3">
                                             <label className="block text-xs font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Assign Role</label>
-                                            <select className="form-select w-full" value={newUser.userRole} onChange={(e) => {
-                                                const selectedRole = roles.find(r => r.role === e.target.value);
-                                                const roleAreas = selectedRole ? selectedRole.access_area : [];
-                                                setNewUser({...newUser, userRole: e.target.value, roleAreas: roleAreas});
+                                            <select className="form-select w-full" value={newUser.userRole || ''} onChange={(e) => {
+                                                const selectedRole = roles.find(r => r.id === parseInt(e.target.value));
+                                                const roleAreas = selectedRole ? selectedRole.access_ids : [];
+                                                setNewUser({...newUser, userRole: parseInt(e.target.value), roleAreas: roleAreas});
                                             }}>
                                                 <option value="">Select role</option>
-                                                {roles.map((role) => (<option key={role.id} value={role.role}>{role.role}</option>))}
+                                                {roles.map((role) => (<option key={role.id} value={role.id}>{role.role}</option>))}
                                             </select>
                                         </div>
                                         {newUser.roleAreas.length > 0 && (
                                             <div className="mb-3">
                                                 <label className="block text-xs font-semibold mb-2 text-gray-700 dark:text-gray-300">Role Permissions (Default)</label>
                                                 <div className="grid grid-cols-2 gap-2">
-                                                    {newUser.roleAreas.map((area) => (
-                                                        <div key={area} className="flex items-center p-2 border border-success/30 bg-success/5 rounded-lg">
-                                                            <svg className="w-3 h-3 text-success mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                <path d="M5 13L9 17L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                                                            </svg>
-                                                            <span className="capitalize text-xs font-medium text-success">{area}</span>
-                                                        </div>
-                                                    ))}
+                                                    {newUser.roleAreas.map((menuId) => {
+                                                        const menuItem = menuItems.find(m => m.id === menuId);
+                                                        return menuItem ? (
+                                                            <div key={menuId} className="flex items-center p-2 border border-success/30 bg-success/5 rounded-lg">
+                                                                <svg className="w-3 h-3 text-success mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                    <path d="M5 13L9 17L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                                                                </svg>
+                                                                <span className="capitalize text-xs font-medium text-success">{menuItem.menuItemName}</span>
+                                                            </div>
+                                                        ) : null;
+                                                    })}
                                                 </div>
                                             </div>
                                         )}
                                         <div>
                                             <label className="block text-xs font-semibold mb-2 text-gray-700 dark:text-gray-300">Additional Access</label>
                                             <div className="grid grid-cols-2 gap-2">
-                                                {availableAreas.filter(area => !newUser.roleAreas.includes(area)).map((area) => (
-                                                    <label key={area} className={`flex items-center p-2 border rounded-lg cursor-pointer transition ${newUser.customAreas.includes(area) ? 'border-primary bg-primary/5' : 'border-gray-300 dark:border-gray-600 hover:border-primary/50'}`}>
-                                                        <input type="checkbox" className="form-checkbox text-primary" checked={newUser.customAreas.includes(area)} onChange={() => handleNewUserCheckbox(area)} />
-                                                        <span className="ml-2 capitalize text-xs font-medium">{area}</span>
+                                                {menuItems.filter(item => !newUser.roleAreas.includes(item.id)).map((item) => (
+                                                    <label key={item.id} className={`flex items-center p-2 border rounded-lg cursor-pointer transition ${newUser.customAreas.includes(item.id) ? 'border-primary bg-primary/5' : 'border-gray-300 dark:border-gray-600 hover:border-primary/50'}`}>
+                                                        <input type="checkbox" className="form-checkbox text-primary" checked={newUser.customAreas.includes(item.id)} onChange={() => handleNewUserCheckbox(item.id)} />
+                                                        <span className="ml-2 capitalize text-xs font-medium">{item.menuItemName}</span>
                                                     </label>
                                                 ))}
-                                                {availableAreas.filter(area => !newUser.roleAreas.includes(area)).length === 0 && newUser.roleAreas.length > 0 && (
+                                                {menuItems.filter(item => !newUser.roleAreas.includes(item.id)).length === 0 && newUser.roleAreas.length > 0 && (
                                                     <p className="text-xs text-gray-400 col-span-2">All permissions granted by role</p>
                                                 )}
                                             </div>
@@ -1038,14 +1048,14 @@ const UserAccess = () => {
                                 <label className="block text-sm font-semibold mb-2">Select Role</label>
                                 <select
                                     className="form-select w-full"
-                                    value={currentUser.role}
+                                    value={currentUser.roleId || ''}
                                     onChange={(e) => {
-                                        const selectedRole = roles.find(r => r.role === e.target.value);
-                                        const newRoleAreas = selectedRole ? selectedRole.access_area : [];
-                                        const keptCustomAreas = currentUser.customAreas.filter(area => newRoleAreas.includes(area));
+                                        const selectedRole = roles.find(r => r.id === parseInt(e.target.value));
+                                        const newRoleAreas = selectedRole ? selectedRole.access_ids : [];
+                                        const keptCustomAreas = currentUser.customAreas.filter(id => !newRoleAreas.includes(id));
                                         setCurrentUser({ 
                                             ...currentUser, 
-                                            role: e.target.value,
+                                            roleId: parseInt(e.target.value),
                                             roleAreas: newRoleAreas,
                                             customAreas: keptCustomAreas
                                         });
@@ -1053,7 +1063,7 @@ const UserAccess = () => {
                                 >
                                     <option value="">Choose a role...</option>
                                     {roles.map((role) => (
-                                        <option key={role.id} value={role.role}>{role.role}</option>
+                                        <option key={role.id} value={role.id}>{role.role}</option>
                                     ))}
                                 </select>
                             </div>
@@ -1062,14 +1072,17 @@ const UserAccess = () => {
                                 <label className="block text-sm font-semibold mb-3">Role Permissions</label>
                                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Permissions from assigned role (read-only)</p>
                                 <div className="grid grid-cols-2 gap-3 mb-6">
-                                    {currentUser.roleAreas.map((area) => (
-                                        <div key={area} className="flex items-center p-3 border-2 border-success/30 bg-success/5 rounded-lg">
-                                            <svg className="w-4 h-4 text-success mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M5 13L9 17L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                            </svg>
-                                            <span className="capitalize font-medium text-sm text-success">{area}</span>
-                                        </div>
-                                    ))}
+                                    {currentUser.roleAreas.map((menuId) => {
+                                        const menuItem = menuItems.find(m => m.id === menuId);
+                                        return menuItem ? (
+                                            <div key={menuId} className="flex items-center p-3 border-2 border-success/30 bg-success/5 rounded-lg">
+                                                <svg className="w-4 h-4 text-success mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M5 13L9 17L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                                </svg>
+                                                <span className="capitalize font-medium text-sm text-success">{menuItem.menuItemName}</span>
+                                            </div>
+                                        ) : null;
+                                    })}
                                     {currentUser.roleAreas.length === 0 && (
                                         <p className="text-xs text-gray-400 col-span-2">No role assigned</p>
                                     )}
@@ -1078,10 +1091,10 @@ const UserAccess = () => {
                                 <label className="block text-sm font-semibold mb-3">Additional Permissions</label>
                                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Add extra permissions beyond role access</p>
                                 <div className="grid grid-cols-2 gap-3">
-                                    {availableAreas.filter(area => !currentUser.roleAreas.includes(area)).map((area) => {
-                                        const isChecked = currentUser.customAreas.includes(area);
+                                    {menuItems.filter(item => !currentUser.roleAreas.includes(item.id)).map((item) => {
+                                        const isChecked = currentUser.customAreas.includes(item.id);
                                         return (
-                                            <label key={area} className={`flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                                            <label key={item.id} className={`flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all ${
                                                 isChecked 
                                                     ? 'border-primary bg-primary/5' 
                                                     : 'border-gray-200 dark:border-gray-700 hover:border-primary/50'
@@ -1090,13 +1103,13 @@ const UserAccess = () => {
                                                     type="checkbox"
                                                     className="form-checkbox text-primary"
                                                     checked={isChecked}
-                                                    onChange={() => handleUserCheckbox(area)}
+                                                    onChange={() => handleUserCheckbox(item.id)}
                                                 />
-                                                <span className="ml-2 capitalize font-medium text-sm">{area}</span>
+                                                <span className="ml-2 capitalize font-medium text-sm">{item.menuItemName}</span>
                                             </label>
                                         );
                                     })}
-                                    {availableAreas.filter(area => !currentUser.roleAreas.includes(area)).length === 0 && (
+                                    {menuItems.filter(item => !currentUser.roleAreas.includes(item.id)).length === 0 && (
                                         <p className="text-xs text-gray-400 col-span-2">All permissions already granted by role</p>
                                     )}
                                 </div>
