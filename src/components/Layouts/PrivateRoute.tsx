@@ -14,8 +14,18 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, requiredAccess })
   
   if (requiredAccess) {
     const role = localStorage.getItem('userRole');
-    if (role === 'Admin') {
-      return <>{children}</>;
+    
+    // Handle admin access requirement
+    if (requiredAccess === 'admin') {
+      if (role && role.toLowerCase() === 'admin') {
+        return children;
+      }
+      return <Navigate to="/" replace />;
+    }
+    
+    // Admin users have access to everything
+    if (role && role.toLowerCase() === 'admin') {
+      return children;
     }
     
     const accessStr = localStorage.getItem('userAccess');
