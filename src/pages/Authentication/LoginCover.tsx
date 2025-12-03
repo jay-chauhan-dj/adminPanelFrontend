@@ -39,10 +39,15 @@ const LoginCover = () => {
 
     const sendOtp = async () => {
         setOtpSending(true);
-        const response = await postRequest("/v1/sendOtp", { username, password });
-        setLoginKey(response.loginKey);
-        setOtpSent(response.otpSent);
-        setOtpSending(false);
+        try {
+            const response = await postRequest("/v1/sendOtp", { username, password });
+            setLoginKey(response.loginKey);
+            setOtpSent(response.otpSent);
+        } catch (error) {
+            // Error is already handled by postRequest, just reset state
+        } finally {
+            setOtpSending(false);
+        }
     }
 
     const handleKeyPress = (event: any) => {
