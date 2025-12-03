@@ -30,7 +30,7 @@ const RegisterFace = () => {
             const data = await response.json();
             if (data.success && data.user) {
                 if (data.user.hasBiometric) {
-                    navigate('/attendance/clock', { replace: true });
+                    navigate('/attendance/clock-in-out', { replace: true });
                     return;
                 }
                 setFormData({
@@ -95,7 +95,7 @@ const RegisterFace = () => {
 
             if (response.ok && data.success) {
                 await Swal.fire('Success', 'Face registered successfully!', 'success');
-                navigate('/attendance/clock');
+                navigate('/attendance/clock-in-out');
             } else {
                 Swal.fire('Error', data.error || 'Failed to register face', 'error');
             }
@@ -187,7 +187,7 @@ const RegisterFace = () => {
                             <button
                                 type="button"
                                 className="btn btn-outline-secondary w-full"
-                                onClick={() => navigate('/attendance/clock')}
+                                onClick={() => navigate('/attendance/clock-in-out')}
                             >
                                 Back to Attendance
                             </button>

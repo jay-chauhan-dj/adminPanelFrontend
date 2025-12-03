@@ -4,7 +4,7 @@ import { setPageTitle } from '../store/themeConfigSlice';
 
 const Analytics = () => {
     const dispatch = useDispatch();
-    
+   
     useEffect(() => {
         dispatch(setPageTitle('Dashboard'));
     }, [dispatch]);
@@ -17,5 +17,4 @@ const Analytics = () => {
         </div>
     );
 };
-
 export default Analytics;
