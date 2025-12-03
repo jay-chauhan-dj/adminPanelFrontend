@@ -106,5 +106,7 @@ const componentMap = {
     'Attendance/RegisterFace': lazy(() => import('../pages/Attendance/RegisterFace')),
     'Attendance/Settings': lazy(() => import('../pages/Attendance/Settings')),
     'Apps/AppManagement': lazy(() => import('../pages/Apps/AppManagement')),
+    'Apps/Holidays': lazy(() => import('../pages/Apps/Holidays')),
+    'Apps/HolidayManagement': lazy(() => import('../pages/Apps/HolidayManagement')),
 };
 export { componentMap };
