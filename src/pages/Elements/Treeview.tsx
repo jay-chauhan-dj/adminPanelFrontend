@@ -53,7 +53,12 @@ const Treeview = () => {
         ]
     };
 
-    const TreeNode = ({ data, className }) => {
+    interface TreeNodeProps {
+        data: any;
+        className: string;
+    }
+
+    const TreeNode: React.FC<TreeNodeProps> = ({ data, className }) => {
         return (
             <ul className={"font-semibold " + className}>
                 <li className="py-[5px]">
@@ -86,7 +91,7 @@ const Treeview = () => {
                                 {data.name}
                             </button>
                             <AnimateHeight duration={300} height={treeview.includes(data.name) ? 'auto' : 0}>
-                                {data.children.map((child, index) => (
+                                {data.children.map((child: any, index: number) => (
                                     <TreeNode key={index} data={child} className={"ltr:pl-14 rtl:pr-14"} />
                                 ))}
                             </AnimateHeight>

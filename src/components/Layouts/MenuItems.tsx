@@ -1,12 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { postRequest } from '../../utils/Request';
+import { getRequest, postRequest } from '../../utils/Request';
 import { NavLink, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 
 const MySwal = withReactContent(Swal);
 
-const renderMenu = (items) => {
+interface MenuItem {
+    menuTitle: string;
+    menuType: number;
+    menuRoute?: string;
+    menuSvg?: string;
+    children?: MenuItem[];
+}
+
+const renderMenu = (items: MenuItem[]): JSX.Element[] => {
     return items.map(item => (
         (item.menuType == 0) ? (
             <div key={item.menuTitle}>
@@ -16,7 +24,7 @@ const renderMenu = (items) => {
                     </svg>
                     <span>{item.menuTitle}</span>
                 </h2>
-                {renderMenu(item.children)}
+                {item.children && renderMenu(item.children)}
             </div>
         ) : (
             <li key={item.menuTitle} className="nav-item">
@@ -40,7 +48,7 @@ const renderMenu = (items) => {
 const ItemList: React.FC = () => {
     const navigate = useNavigate();
 
-    const [menuData, setMenuData] = useState([]);
+    const [menuData, setMenuData] = useState<MenuItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [hasBiometric, setHasBiometric] = useState<boolean | null>(null);
@@ -53,14 +61,7 @@ const ItemList: React.FC = () => {
                     "authorization": "Bearer " + localStorage.getItem('accessToken')
                 };
                 
-                // Fetch biometric status
-                const API_BASE_URL = import.meta.env.REACT_APP_API_BASE || 'http://localhost:3000';
-                const bioResponse = await fetch(`${API_BASE_URL}/v1/attendance/current-user`, { headers });
-                const bioData = await bioResponse.json();
-                if (bioData.success) {
-                    setHasBiometric(bioData.user.hasBiometric);
-                }
-
+                
                 // Fetch menu items
                 const data = await postRequest('/v1/menu/getMenuItems', {}, {}, headers);
                 if (data.message == "Unauthorized") {
@@ -73,9 +74,15 @@ const ItemList: React.FC = () => {
                     console.error('Menu data is not an array:', data);
                     setMenuData([]);
                 }
+
+                // Fetch biometric status
+                const bioResponse = await getRequest("/v1/attendance/current-user", {}, headers);
+                console.log('Biometric response:', bioResponse);
+                if (bioResponse.success) {
+                    setHasBiometric(bioResponse.user.hasBiometric);
+                }
             } catch (err: any) {
                 setError(err.message);
-                console.error('Error fetching menu:', err);
                 setMenuData([]);
             } finally {
                 setLoading(false);
@@ -86,7 +93,7 @@ const ItemList: React.FC = () => {
     }, []);
 
     // Filter menu items based on biometric status
-    const filterMenuItems = (items) => {
+    const filterMenuItems = (items: MenuItem[]): MenuItem[] => {
         return items.filter(item => {
             // Hide "Register Face" menu if user already has biometric
             if (hasBiometric && item.menuRoute === '/attendance/register-face') {

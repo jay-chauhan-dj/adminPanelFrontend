@@ -1,7 +1,14 @@
 import React from 'react';
 
-const Chats = ({ selectedUser, message, loginUser, index }) => {
-    const createMarkup = (text) => {
+interface ChatsProps {
+    selectedUser: any;
+    message: any;
+    loginUser: any;
+    index: number;
+}
+
+const Chats: React.FC<ChatsProps> = ({ selectedUser, message, loginUser, index }) => {
+    const createMarkup = (text: string) => {
         return { __html: text.replace(/\n/g, '<br>') };
     };
 
@@ -61,7 +68,12 @@ const Chats = ({ selectedUser, message, loginUser, index }) => {
     );
 };
 
-const Messages = ({ selectedUser, date }) => {
+interface MessagesProps {
+    selectedUser: any;
+    date: string;
+}
+
+const Messages: React.FC<MessagesProps> = ({ selectedUser, date }) => {
     return (
         <>
             <div className="block m-6 mt-0">
@@ -69,7 +81,7 @@ const Messages = ({ selectedUser, date }) => {
                     <span className="relative top-2 px-3 bg-white dark:bg-black">{date}</span>
                 </h4>
             </div>
-            {selectedUser.messages[date].map((message, index) => (
+            {selectedUser.messages[date].map((message: any, index: any) => (
                 <Chats selectedUser={selectedUser} message={message} key={index} loginUser={{ path: "/assets/images/display-pic.jpg" }} index={index} />
             ))}
         </>

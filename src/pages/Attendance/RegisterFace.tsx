@@ -3,6 +3,7 @@ import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import { getRequest, postRequest } from '../../utils/Request';
 
 const RegisterFace = () => {
     const dispatch = useDispatch();
@@ -13,8 +14,8 @@ const RegisterFace = () => {
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({ name: '', employee_code: '', userId: '' });
     const [userLoading, setUserLoading] = useState(true);
-
-    const API_BASE_URL = import.meta.env.REACT_APP_API_BASE || 'http://localhost:3000';
+    const token = localStorage.getItem('accessToken');
+    const headers = { 'Authorization': `Bearer ${token}` };
 
     useEffect(() => {
         dispatch(setPageTitle('Register Face'));
@@ -25,10 +26,7 @@ const RegisterFace = () => {
 
     const fetchCurrentUser = async () => {
         try {
-            const token = localStorage.getItem('accessToken');
-            const response = await fetch(`${API_BASE_URL}/v1/attendance/current-user`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const response = await getRequest(`/v1/attendance/current-user`, {}, headers);
             const data = await response.json();
             if (data.success && data.user) {
                 if (data.user.hasBiometric) {
@@ -92,16 +90,7 @@ const RegisterFace = () => {
 
         setLoading(true);
         try {
-            const token = localStorage.getItem('accessToken');
-            const response = await fetch(`${API_BASE_URL}/v1/attendance/register-face`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ image: imageData })
-            });
-
+            const response = await postRequest(`/v1/attendance/register-face`, { image: imageData }, {}, headers);
             const data = await response.json();
 
             if (response.ok && data.success) {

@@ -2,14 +2,15 @@ import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import Swal from 'sweetalert2';
+import { getRequest, postRequest } from '../../utils/Request';
 
 const AttendanceSettings = () => {
     const dispatch = useDispatch();
     const [loading, setLoading] = useState(false);
     const [settings, setSettings] = useState({ latitude: '', longitude: '', radius: '' });
     const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-
-    const API_BASE_URL = import.meta.env.REACT_APP_API_BASE || 'http://localhost:3000';
+    const token = localStorage.getItem('accessToken');
+    const headers = { 'Authorization': `Bearer ${token}` };
 
     useEffect(() => {
         dispatch(setPageTitle('Attendance Settings'));
@@ -19,10 +20,7 @@ const AttendanceSettings = () => {
 
     const loadSettings = async () => {
         try {
-            const token = localStorage.getItem('accessToken');
-            const response = await fetch(`${API_BASE_URL}/v1/attendance/settings`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const response = await getRequest(`/v1/attendance/settings`);
             const data = await response.json();
             if (data.success) {
                 setSettings({
@@ -65,19 +63,12 @@ const AttendanceSettings = () => {
 
         try {
             const token = localStorage.getItem('accessToken');
-            const response = await fetch(`${API_BASE_URL}/v1/attendance/settings`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    latitude: parseFloat(settings.latitude),
-                    longitude: parseFloat(settings.longitude),
-                    radius: parseFloat(settings.radius)
-                })
-            });
-
+            const requestData = {
+                latitude: parseFloat(settings.latitude),
+                longitude: parseFloat(settings.longitude),
+                radius: parseFloat(settings.radius)
+            };
+            const response = await postRequest(`/v1/attendance/settings`, requestData, {}, headers);
             const data = await response.json();
             if (data.success) {
                 Swal.fire('Success', 'Settings updated successfully', 'success');

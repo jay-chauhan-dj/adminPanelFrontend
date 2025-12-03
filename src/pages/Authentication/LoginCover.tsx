@@ -28,14 +28,14 @@ const LoginCover = () => {
         }
     };
     const [flag, setFlag] = useState(themeConfig.locale);
-    const [username, setUsername] = useState();
-    const [password, setPassword] = useState();
+    const [username, setUsername] = useState<string>('');
+    const [password, setPassword] = useState<string>('');
     const [showPassword, setShowPassword] = useState(false);
     const [otpSending, setOtpSending] = useState(false);
     const [loginKey, setLoginKey] = useState("");
     const [loginInitiated, setLoginInitiated] = useState(false);
-    const [otpSent, setOtpSent] = useState();
-    const [otp, setOtp] = useState();
+    const [otpSent, setOtpSent] = useState<any>();
+    const [otp, setOtp] = useState<string>('');
 
     const sendOtp = async () => {
         setOtpSending(true);

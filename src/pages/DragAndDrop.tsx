@@ -15,7 +15,13 @@ const headers = {
     "authorization": "Bearer " + localStorage.getItem("accessToken")
 };
 
-const Item = ({ name, icon, iconClass }) => {
+interface ItemProps {
+    name: string;
+    icon: string;
+    iconClass: string;
+}
+
+const Item: React.FC<ItemProps> = ({ name, icon, iconClass }) => {
     return (
         <center>
             <div>
@@ -27,8 +33,8 @@ const Item = ({ name, icon, iconClass }) => {
 }
 
 const DragAndDrop = () => {
-    const [gridDrag, setGridDrag] = useState([]);
-    const [history, setHistory] = useState([]);
+    const [gridDrag, setGridDrag] = useState<any[]>([]);
+    const [history, setHistory] = useState<any[]>([]);
     const [verifyModal, setVerify] = useState(false);
     const [userVerified, setVerification] = useState(true);
     const [registerModal, setRegister] = useState(false);
@@ -101,11 +107,11 @@ const DragAndDrop = () => {
         }
     };
 
-    const selectItem = (index) => {
+    const selectItem = (index: number) => {
         const selectedItem = gridDrag[index];
 
         if (selectedItem.type === "folder") {
-            setHistory([...history, gridDrag]); // Store the current state before navigating
+            setHistory([...history, gridDrag] as any); // Store the current state before navigating
             setGridDrag(selectedItem.children);
         } else if (selectedItem.type === "back" && history.length > 0) {
             setGridDrag(history[history.length - 1]); // Go back to previous state
@@ -145,7 +151,7 @@ const DragAndDrop = () => {
         code: Yup.number().min(6).required('Please Enter the code'),
     });
 
-    const MaskedInputField = ({ field, form, mask, ...props }) => (
+    const MaskedInputField = ({ field, form, mask, ...props }: any) => (
         <MaskedInput
             {...field}
             {...props}
