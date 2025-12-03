@@ -14,7 +14,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, requiredAccess })
   
   if (requiredAccess) {
     const role = localStorage.getItem('userRole');
-    if (role === 'Admin') {
+    if (role && role.toLowerCase() === 'admin') {
       return <>{children}</>;
     }
     
