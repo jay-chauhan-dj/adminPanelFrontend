@@ -229,13 +229,23 @@ const LoginCover = () => {
                                             </svg>
                                         </span>
                                     </div>
+                                    <div className="text-end mt-2">
+                                        <button
+                                            type="button"
+                                            onClick={sendOtp}
+                                            className="text-primary hover:underline text-sm"
+                                            disabled={otpSending}
+                                        >
+                                            {otpSending ? 'Resending...' : 'Resend OTP'}
+                                        </button>
+                                    </div>
                                 </div>) : ("")}
                                 {otpSent ? (
                                     <button
                                         type="submit"
                                         className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]"
                                         disabled={loginInitiated}
-                                        tabIndex={5}
+                                        tabIndex={4}
                                     >
                                         {loginInitiated ? (
                                             <span className="animate-spin border-2 border-white border-l-transparent rounded-full w-5 h-5 ltr:mr-4 rtl:ml-4 inline-block align-middle"></span>
