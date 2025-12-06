@@ -45,6 +45,7 @@ const initialState = {
     isDarkMode: true,
     sidebar: localStorage.getItem('sidebar') || defaultState.sidebar,
     semidark: localStorage.getItem('semidark') || true,
+    user: JSON.parse(localStorage.getItem('user') || 'null'),
     languageList: [
         { code: 'zh', name: 'Chinese' },
         { code: 'da', name: 'Danish' },
@@ -135,6 +136,14 @@ const themeConfigSlice = createSlice({
 
         setPageTitle(state, { payload }) {
             document.title = `${payload} | Jay Chauhan`;
+        },
+        setUser(state, { payload }) {
+            state.user = payload;
+            if (payload) {
+                localStorage.setItem('user', JSON.stringify(payload));
+            } else {
+                localStorage.removeItem('user');
+            }
         },
     },
 });
