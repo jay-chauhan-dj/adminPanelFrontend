@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getRequest, postRequest } from '../../utils/Request';
+import { postRequest, getRequest } from '../../utils/Request';
 import { NavLink, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';

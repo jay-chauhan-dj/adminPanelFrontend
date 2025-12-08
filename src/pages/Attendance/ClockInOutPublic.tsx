@@ -13,8 +13,6 @@ const ClockInOutPublic = () => {
     const [action, setAction] = useState<'clock_in' | 'clock_out'>('clock_in');
     const [lastAttendance, setLastAttendance] = useState<any>(null);
 
-    const API_BASE_URL = import.meta.env.REACT_APP_API_BASE || 'http://localhost:3000';
-
     useEffect(() => {
         startCamera();
         getLocation();
@@ -98,24 +96,24 @@ const ClockInOutPublic = () => {
                 Swal.fire('Success', data.message, 'success');
                 setAction(action === 'clock_in' ? 'clock_out' : 'clock_in');
             } else {
-                if (response.status === 404 && data.error === 'Unknown face') {
-                    const result = await Swal.fire({
-                        title: 'Face Not Registered',
-                        text: 'Your face is not registered. Would you like to register now?',
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonText: 'Register Now',
-                        cancelButtonText: 'Cancel'
-                    });
-                    if (result.isConfirmed) {
-                        window.location.href = '/test-register-face.html';
-                    }
-                } else {
-                    Swal.fire('Error', data.error || 'Failed to process attendance', 'error');
-                }
+                Swal.fire('Error', data.error || 'Failed to process attendance', 'error');
             }
-        } catch (error) {
-            Swal.fire('Error', 'Failed to connect to attendance system', 'error');
+        } catch (error: any) {
+            if (error.response?.status === 404 && error.response?.data?.error === 'Unknown face') {
+                const result = await Swal.fire({
+                    title: 'Face Not Registered',
+                    text: 'Your face is not registered. Would you like to register now?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Register Now',
+                    cancelButtonText: 'Cancel'
+                });
+                if (result.isConfirmed) {
+                    window.location.href = '/test-register-face.html';
+                }
+            } else {
+                Swal.fire('Error', 'Failed to connect to attendance system', 'error');
+            }
         } finally {
             setLoading(false);
         }

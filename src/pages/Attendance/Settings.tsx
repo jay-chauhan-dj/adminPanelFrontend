@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import Swal from 'sweetalert2';
-import { getRequest, postRequest } from '../../utils/Request';
+import { postRequest, getRequest } from '../../utils/Request';
 
 const AttendanceSettings = () => {
     const dispatch = useDispatch();
@@ -10,7 +10,10 @@ const AttendanceSettings = () => {
     const [settings, setSettings] = useState({ latitude: '', longitude: '', radius: '' });
     const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
     const token = localStorage.getItem('accessToken');
-    const headers = { 'Authorization': `Bearer ${token}` };
+    const headers = { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    };
 
     useEffect(() => {
         dispatch(setPageTitle('Attendance Settings'));
@@ -20,8 +23,7 @@ const AttendanceSettings = () => {
 
     const loadSettings = async () => {
         try {
-            const response = await getRequest(`/v1/attendance/settings`);
-            const data = await response.json();
+            const data = await getRequest('/v1/attendance/settings', {}, headers);
             if (data.success) {
                 setSettings({
                     latitude: data.settings.latitude,
@@ -62,14 +64,12 @@ const AttendanceSettings = () => {
         setLoading(true);
 
         try {
-            const token = localStorage.getItem('accessToken');
             const requestData = {
                 latitude: parseFloat(settings.latitude),
                 longitude: parseFloat(settings.longitude),
                 radius: parseFloat(settings.radius)
             };
-            const response = await postRequest(`/v1/attendance/settings`, requestData, {}, headers);
-            const data = await response.json();
+            const data = await postRequest('/v1/attendance/settings', requestData, {}, headers);
             if (data.success) {
                 Swal.fire('Success', 'Settings updated successfully', 'success');
             } else {

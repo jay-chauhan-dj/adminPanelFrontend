@@ -3,7 +3,11 @@ import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+<<<<<<< HEAD
 import { getRequest, postRequest } from '../../utils/Request';
+=======
+import { postRequest, getRequest } from '../../utils/Request';
+>>>>>>> dev-005
 
 const RegisterFace = () => {
     const dispatch = useDispatch();
@@ -15,7 +19,14 @@ const RegisterFace = () => {
     const [formData, setFormData] = useState({ name: '', employee_code: '', userId: '' });
     const [userLoading, setUserLoading] = useState(true);
     const token = localStorage.getItem('accessToken');
+<<<<<<< HEAD
     const headers = { 'Authorization': `Bearer ${token}` };
+=======
+    const headers = { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    };
+>>>>>>> dev-005
 
     useEffect(() => {
         dispatch(setPageTitle('Register Face'));
@@ -26,7 +37,7 @@ const RegisterFace = () => {
 
     const fetchCurrentUser = async () => {
         try {
-            const data = await getRequest(`/v1/attendance/current-user`, {}, headers);
+            const data = await getRequest('/v1/attendance/current-user', {}, headers);
             if (data.success && data.user) {
                 if (data.user.hasBiometric) {
                     navigate('/attendance/clock-in-out', { replace: true });
@@ -89,7 +100,8 @@ const RegisterFace = () => {
 
         setLoading(true);
         try {
-            const data = await postRequest(`/v1/attendance/register-face`, { image: imageData }, {}, headers);
+            const requestData = { image: imageData };
+            const data = await postRequest('/v1/attendance/register-face', requestData, {}, headers);
 
             if (data.success) {
                 await Swal.fire('Success', 'Face registered successfully!', 'success');
