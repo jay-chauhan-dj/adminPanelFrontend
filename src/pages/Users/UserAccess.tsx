@@ -6,6 +6,8 @@ import PasswordChecklist from 'react-password-checklist';
 
 const UserAccess = () => {
     const [users, setUsers] = useState<any[]>([]);
+    const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
     const [roles, setRoles] = useState<any[]>([]);
     const [menuItems, setMenuItems] = useState<any[]>([]);
     const [showModal, setShowModal] = useState(false);
@@ -62,14 +64,17 @@ const UserAccess = () => {
             console.log('Users response:', response);
             if (response?.data && Array.isArray(response.data)) {
                 setUsers(response.data);
+                setFilteredUsers(response.data);
             } else {
                 console.error('Invalid users response:', response);
                 setUsers([]);
+                setFilteredUsers([]);
             }
         } catch (error: any) {
             console.error('Error fetching users:', error);
             alert('Failed to fetch users: ' + (error?.response?.data?.message || error.message));
             setUsers([]);
+            setFilteredUsers([]);
         }
     };
 
@@ -355,6 +360,24 @@ const UserAccess = () => {
         }
     };
 
+    const handleSearch = (query: string) => {
+        setSearchQuery(query);
+        if (!query.trim()) {
+            setFilteredUsers(users);
+            return;
+        }
+        
+        const filtered = users.filter(user => 
+            user.userFirstName?.toLowerCase().includes(query.toLowerCase()) ||
+            user.userLastName?.toLowerCase().includes(query.toLowerCase()) ||
+            user.userEmail?.toLowerCase().includes(query.toLowerCase()) ||
+            user.userRoleName?.toLowerCase().includes(query.toLowerCase()) ||
+            user.userLogin?.toLowerCase().includes(query.toLowerCase()) ||
+            user.userPhoneNumber?.includes(query)
+        );
+        setFilteredUsers(filtered);
+    };
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -379,13 +402,38 @@ const UserAccess = () => {
                             <p className="text-xs text-gray-500 dark:text-gray-400">Assign roles to users</p>
                         </div>
                     </div>
-                    {/* Add User Button */}
-                    <button className="btn btn-primary" onClick={openAddUserModal}>
-                        <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                        </svg>
-                        Add User
-                    </button>
+                    <div className="flex items-center gap-3">
+                        {/* Search Bar */}
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="Search users..."
+                                value={searchQuery}
+                                onChange={(e) => handleSearch(e.target.value)}
+                                className="form-input w-64 pl-10 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                            />
+                            <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            {searchQuery && (
+                                <button
+                                    onClick={() => handleSearch('')}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                                >
+                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                </button>
+                            )}
+                        </div>
+                        {/* Add User Button */}
+                        <button className="btn btn-primary" onClick={openAddUserModal}>
+                            <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                            </svg>
+                            Add User
+                        </button>
+                    </div>
                 </div>
 
                 <div className="overflow-x-auto pb-4 custom-scrollbar">
@@ -415,8 +463,29 @@ const UserAccess = () => {
                             scrollbar-color: #4361ee transparent;
                         }
                     `}</style>
-                    <div className="flex gap-4">
-                    {users.map((user) => (
+                    {filteredUsers.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                            <svg className="w-16 h-16 text-gray-300 dark:text-gray-600 mb-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            <h3 className="text-lg font-semibold text-gray-500 dark:text-gray-400 mb-2">
+                                {searchQuery ? 'No users found' : 'No users available'}
+                            </h3>
+                            <p className="text-sm text-gray-400 dark:text-gray-500">
+                                {searchQuery ? `No users match "${searchQuery}"` : 'Add your first user to get started'}
+                            </p>
+                            {searchQuery && (
+                                <button
+                                    onClick={() => handleSearch('')}
+                                    className="mt-4 btn btn-outline-primary btn-sm"
+                                >
+                                    Clear Search
+                                </button>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="flex gap-4">
+                        {filteredUsers.map((user) => (
                         <div key={user.userId} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-lg transition-shadow flex flex-col w-80 flex-shrink-0">
                             <div className="flex-1">
                                 <div className="flex items-start justify-between mb-3">
@@ -494,7 +563,8 @@ const UserAccess = () => {
                             </div>
                         </div>
                     ))}
-                    </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
