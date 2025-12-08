@@ -26,8 +26,7 @@ const RegisterFace = () => {
 
     const fetchCurrentUser = async () => {
         try {
-            const response = await getRequest(`/v1/attendance/current-user`, {}, headers);
-            const data = await response.json();
+            const data = await getRequest(`/v1/attendance/current-user`, {}, headers);
             if (data.success && data.user) {
                 if (data.user.hasBiometric) {
                     navigate('/attendance/clock', { replace: true });
@@ -90,10 +89,9 @@ const RegisterFace = () => {
 
         setLoading(true);
         try {
-            const response = await postRequest(`/v1/attendance/register-face`, { image: imageData }, {}, headers);
-            const data = await response.json();
+            const data = await postRequest(`/v1/attendance/register-face`, { image: imageData }, {}, headers);
 
-            if (response.ok && data.success) {
+            if (data.success) {
                 await Swal.fire('Success', 'Face registered successfully!', 'success');
                 navigate('/attendance/clock');
             } else {
