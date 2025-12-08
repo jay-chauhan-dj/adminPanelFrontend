@@ -3,6 +3,16 @@ import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import { postRequest, getRequest, deleteRequest } from '../../utils/Request';
+
+const LiveTime = ({ baseTime }: { baseTime: string }) => {
+    const [time, setTime] = useState(new Date(baseTime));
+    useEffect(() => {
+        const interval = setInterval(() => setTime(new Date()), 1000);
+        return () => clearInterval(interval);
+    }, []);
+    return <>{time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}</>;
+};
 
 const ClockInOut = () => {
     const dispatch = useDispatch();
@@ -20,8 +30,11 @@ const ClockInOut = () => {
     const [elapsedTime, setElapsedTime] = useState('00:00:00');
     const [timerKey, setTimerKey] = useState(0);
     const [clockInTimestamp, setClockInTimestamp] = useState<number | null>(null);
-
-    const API_BASE_URL = import.meta.env.REACT_APP_API_BASE || 'http://localhost:3000';
+    const token = localStorage.getItem('accessToken');
+    const headers = { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                };
 
     useEffect(() => {
         dispatch(setPageTitle('Clock In/Out'));
@@ -60,11 +73,7 @@ const ClockInOut = () => {
 
     const checkBiometric = async () => {
         try {
-            const token = localStorage.getItem('accessToken');
-            const response = await fetch(`${API_BASE_URL}/v1/attendance/current-user`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await response.json();
+            const data = await getRequest('/v1/attendance/current-user', {}, headers);
             if (data.success) {
                 setHasBiometric(data.user.hasBiometric);
             }
@@ -75,11 +84,7 @@ const ClockInOut = () => {
 
     const fetchTodayAttendance = async () => {
         try {
-            const token = localStorage.getItem('accessToken');
-            const response = await fetch(`${API_BASE_URL}/v1/attendance/today`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await response.json();
+            const data = await getRequest('/v1/attendance/today', {}, headers);
             if (data.success && data.attendance) {
                 setLastAttendance(data.attendance);
                 if (data.attendance.break_in_time && !data.attendance.break_out_time) {
@@ -104,12 +109,7 @@ const ClockInOut = () => {
 
         if (result.isConfirmed) {
             try {
-                const token = localStorage.getItem('accessToken');
-                const response = await fetch(`${API_BASE_URL}/v1/attendance/delete-face`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await response.json();
+                const data = await deleteRequest('/v1/attendance/delete-face', {}, headers);
                 if (data.success) {
                     await Swal.fire('Deleted!', 'Your face data has been deleted.', 'success');
                     setHasBiometric(false);
@@ -192,24 +192,15 @@ const ClockInOut = () => {
         setLoading(true);
         setAction(selectedAction);
         try {
-            const token = localStorage.getItem('accessToken');
-            const response = await fetch(`${API_BASE_URL}/v1/attendance/clock`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    image: imageData,
-                    action: selectedAction,
-                    latitude: location.latitude,
-                    longitude: location.longitude
-                })
-            });
+            const requestData = {
+                image: imageData,
+                action: selectedAction,
+                latitude: location.latitude,
+                longitude: location.longitude
+            };
+            const data = await postRequest('/v1/attendance/clock', requestData, {}, headers);
 
-            const data = await response.json();
-
-            if (response.ok && data.success) {
+            if (data.success) {
                 if (selectedAction === 'clock_in') {
                     setClockInTimestamp(Date.now());
                 } else {
@@ -219,24 +210,26 @@ const ClockInOut = () => {
                 setLastAttendance(data.attendance);
                 Swal.fire('Success', data.message, 'success');
             } else {
-                if (response.status === 404 && data.error === 'Unknown face') {
-                    const result = await Swal.fire({
-                        title: 'Face Not Registered',
-                        text: 'Your face is not registered. Would you like to register now?',
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonText: 'Register Now',
-                        cancelButtonText: 'Cancel'
-                    });
-                    if (result.isConfirmed) {
-                        navigate('/attendance/register-face');
-                    }
-                } else {
-                    Swal.fire('Error', data.error || 'Failed to process attendance', 'error');
-                }
+                Swal.fire('Error', data.error || 'Failed to process attendance', 'error');
             }
-        } catch (error) {
-            Swal.fire('Error', 'Failed to connect to attendance system', 'error');
+        } catch (error: any) {
+            console.error('Clock action error:', error);
+            if (error.response?.status === 404 && error.response?.data?.error === 'Unknown face') {
+                const result = await Swal.fire({
+                    title: 'Face Not Registered',
+                    text: 'Your face is not registered. Would you like to register now?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Register Now',
+                    cancelButtonText: 'Cancel'
+                });
+                if (result.isConfirmed) {
+                    navigate('/attendance/register-face');
+                }
+            } else {
+                const errorMsg = error.response?.data?.error || error.response?.data?.message || error.message || 'Failed to connect to attendance system';
+                Swal.fire('Error', errorMsg, 'error');
+            }
         } finally {
             setLoading(false);
         }
@@ -250,23 +243,14 @@ const ClockInOut = () => {
 
         setBreakLoading(true);
         try {
-            const token = localStorage.getItem('accessToken');
-            const response = await fetch(`${API_BASE_URL}/v1/attendance/break`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    action: onBreak ? 'break_out' : 'break_in',
-                    latitude: location.latitude,
-                    longitude: location.longitude
-                })
-            });
+            const requestData = {
+                action: onBreak ? 'break_out' : 'break_in',
+                latitude: location.latitude,
+                longitude: location.longitude
+            };
+            const data = await postRequest('/v1/attendance/break', requestData, {}, headers);
 
-            const data = await response.json();
-
-            if (response.ok && data.success) {
+            if (data.success) {
                 setOnBreak(!onBreak);
                 setLastAttendance(data.attendance);
                 Swal.fire('Success', data.message, 'success');
@@ -441,7 +425,7 @@ const ClockInOut = () => {
                                     <div className="p-3 bg-green-50 dark:bg-green-900/10 rounded">
                                         <div className="flex justify-between items-center">
                                             <span className="text-gray-600 dark:text-gray-400 text-sm">Clock In</span>
-                                            <span className="font-semibold text-green-600 dark:text-green-400">{formatTime(lastAttendance.clock_in_time)}</span>
+                                            <span className="font-semibold text-green-600 dark:text-green-400"><LiveTime baseTime={lastAttendance.clock_in_time} /></span>
                                         </div>
                                     </div>
                                 )}
@@ -449,7 +433,7 @@ const ClockInOut = () => {
                                     <div className="p-3 bg-red-50 dark:bg-red-900/10 rounded">
                                         <div className="flex justify-between items-center">
                                             <span className="text-gray-600 dark:text-gray-400 text-sm">Clock Out</span>
-                                            <span className="font-semibold text-red-600 dark:text-red-400">{formatTime(lastAttendance.clock_out_time)}</span>
+                                            <span className="font-semibold text-red-600 dark:text-red-400"><LiveTime baseTime={lastAttendance.clock_out_time} /></span>
                                         </div>
                                     </div>
                                 )}
@@ -457,7 +441,7 @@ const ClockInOut = () => {
                                     <div className="p-3 bg-yellow-50 dark:bg-yellow-900/10 rounded">
                                         <div className="flex justify-between items-center">
                                             <span className="text-gray-600 dark:text-gray-400 text-sm">Break Start</span>
-                                            <span className="font-semibold text-yellow-600 dark:text-yellow-400">{formatTime(lastAttendance.break_in_time)}</span>
+                                            <span className="font-semibold text-yellow-600 dark:text-yellow-400"><LiveTime baseTime={lastAttendance.break_in_time} /></span>
                                         </div>
                                     </div>
                                 )}
@@ -465,7 +449,7 @@ const ClockInOut = () => {
                                     <div className="p-3 bg-blue-50 dark:bg-blue-900/10 rounded">
                                         <div className="flex justify-between items-center">
                                             <span className="text-gray-600 dark:text-gray-400 text-sm">Break End</span>
-                                            <span className="font-semibold text-blue-600 dark:text-blue-400">{formatTime(lastAttendance.break_out_time)}</span>
+                                            <span className="font-semibold text-blue-600 dark:text-blue-400"><LiveTime baseTime={lastAttendance.break_out_time} /></span>
                                         </div>
                                     </div>
                                 )}

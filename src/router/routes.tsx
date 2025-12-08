@@ -105,6 +105,7 @@ const componentMap = {
     'Attendance/ClockInOut': lazy(() => import('../pages/Attendance/ClockInOut')),
     'Attendance/RegisterFace': lazy(() => import('../pages/Attendance/RegisterFace')),
     'Attendance/Settings': lazy(() => import('../pages/Attendance/Settings')),
+    'Attendance/LeaveManagement': lazy(() => import('../pages/Attendance/LeaveManagement')),
     'Apps/AppManagement': lazy(() => import('../pages/Apps/AppManagement')),
 };
 export { componentMap };

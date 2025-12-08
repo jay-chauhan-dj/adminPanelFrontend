@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import { postRequest } from '../../utils/Request';
 
 const ClockInOutPublic = () => {
     const navigate = useNavigate();
@@ -11,8 +12,6 @@ const ClockInOutPublic = () => {
     const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
     const [action, setAction] = useState<'clock_in' | 'clock_out'>('clock_in');
     const [lastAttendance, setLastAttendance] = useState<any>(null);
-
-    const API_BASE_URL = import.meta.env.REACT_APP_API_BASE || 'http://localhost:3000';
 
     useEffect(() => {
         startCamera();
@@ -83,42 +82,37 @@ const ClockInOutPublic = () => {
 
         setLoading(true);
         try {
-            const response = await fetch(`${API_BASE_URL}/v1/attendance-public/clock`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    image: imageData,
-                    action: action,
-                    latitude: location.latitude,
-                    longitude: location.longitude
-                })
-            });
+            const requestData = {
+                image: imageData,
+                action: action,
+                latitude: location.latitude,
+                longitude: location.longitude
+            };
+            const data = await postRequest('/v1/attendance-public/clock', requestData, {}, {});
 
-            const data = await response.json();
-
-            if (response.ok && data.success) {
+            if (data.success) {
                 setLastAttendance(data.attendance);
                 Swal.fire('Success', data.message, 'success');
                 setAction(action === 'clock_in' ? 'clock_out' : 'clock_in');
             } else {
-                if (response.status === 404 && data.error === 'Unknown face') {
-                    const result = await Swal.fire({
-                        title: 'Face Not Registered',
-                        text: 'Your face is not registered. Would you like to register now?',
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonText: 'Register Now',
-                        cancelButtonText: 'Cancel'
-                    });
-                    if (result.isConfirmed) {
-                        window.location.href = '/test-register-face.html';
-                    }
-                } else {
-                    Swal.fire('Error', data.error || 'Failed to process attendance', 'error');
-                }
+                Swal.fire('Error', data.error || 'Failed to process attendance', 'error');
             }
-        } catch (error) {
-            Swal.fire('Error', 'Failed to connect to attendance system', 'error');
+        } catch (error: any) {
+            if (error.response?.status === 404 && error.response?.data?.error === 'Unknown face') {
+                const result = await Swal.fire({
+                    title: 'Face Not Registered',
+                    text: 'Your face is not registered. Would you like to register now?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Register Now',
+                    cancelButtonText: 'Cancel'
+                });
+                if (result.isConfirmed) {
+                    window.location.href = '/test-register-face.html';
+                }
+            } else {
+                Swal.fire('Error', 'Failed to connect to attendance system', 'error');
+            }
         } finally {
             setLoading(false);
         }

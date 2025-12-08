@@ -3,6 +3,7 @@ import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import { postRequest, getRequest } from '../../utils/Request';
 
 const RegisterFace = () => {
     const dispatch = useDispatch();
@@ -13,8 +14,11 @@ const RegisterFace = () => {
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({ name: '', employee_code: '', userId: '' });
     const [userLoading, setUserLoading] = useState(true);
-
-    const API_BASE_URL = import.meta.env.REACT_APP_API_BASE || 'http://localhost:3000';
+    const token = localStorage.getItem('accessToken');
+    const headers = { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    };
 
     useEffect(() => {
         dispatch(setPageTitle('Register Face'));
@@ -25,11 +29,7 @@ const RegisterFace = () => {
 
     const fetchCurrentUser = async () => {
         try {
-            const token = localStorage.getItem('accessToken');
-            const response = await fetch(`${API_BASE_URL}/v1/attendance/current-user`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await response.json();
+            const data = await getRequest('/v1/attendance/current-user', {}, headers);
             if (data.success && data.user) {
                 if (data.user.hasBiometric) {
                     navigate('/attendance/clock-in-out', { replace: true });
@@ -92,19 +92,10 @@ const RegisterFace = () => {
 
         setLoading(true);
         try {
-            const token = localStorage.getItem('accessToken');
-            const response = await fetch(`${API_BASE_URL}/v1/attendance/register-face`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ image: imageData })
-            });
+            const requestData = { image: imageData };
+            const data = await postRequest('/v1/attendance/register-face', requestData, {}, headers);
 
-            const data = await response.json();
-
-            if (response.ok && data.success) {
+            if (data.success) {
                 await Swal.fire('Success', 'Face registered successfully!', 'success');
                 navigate('/attendance/clock-in-out');
             } else {
