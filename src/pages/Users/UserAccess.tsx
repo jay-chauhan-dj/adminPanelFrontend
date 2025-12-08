@@ -261,7 +261,7 @@ const UserAccess = () => {
         if (!newUser.userFirstName || !newUser.userLastName || 
             !newUser.userAddress['address-1'] || !newUser.userAddress.city || 
             !newUser.userAddress.state || !newUser.userAddress.country || 
-            !newUser.userAddress['postal-code'] || !newUser.userLogin || !newUser.userPassword) {
+            !newUser.userAddress['postal-code']) {
             return;
         }
         
@@ -919,108 +919,6 @@ const UserAccess = () => {
                                                         <input type="text" className={`form-input w-full ${formSubmitted ? 'submitted' : ''}`} placeholder="Country" value={newUser.userAddress.country} onChange={(e) => setNewUser({...newUser, userAddress: {...newUser.userAddress, country: e.target.value}})} required readOnly={isPincodeInDb} />
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                                        <h4 className="text-sm font-bold text-primary mb-3 flex items-center">
-                                            <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M12 15V17M6 21H18C19.1046 21 20 20.1046 20 19V13C20 11.8954 19.1046 11 18 11H6C4.89543 11 4 11.8954 4 13V19C4 20.1046 4.89543 21 6 21ZM16 11V7C16 5.93913 15.5786 4.92172 14.8284 4.17157C14.0783 3.42143 13.0609 3 12 3C10.9391 3 9.92172 3.42143 9.17157 4.17157C8.42143 4.92172 8 5.93913 8 7V11H16Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                                            </svg>
-                                            Login Credentials
-                                        </h4>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <label className="block text-xs font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Username *</label>
-                                                <input 
-                                                    type="text" 
-                                                    className={`form-input w-full ${formSubmitted ? 'submitted' : ''} ${usernameError ? 'border-red-500' : ''}`} 
-                                                    placeholder="username" 
-                                                    maxLength={16} 
-                                                    value={newUser.userLogin} 
-                                                    onChange={async (e) => {
-                                                        const username = e.target.value;
-                                                        setNewUser({...newUser, userLogin: username});
-                                                        setUsernameError('');
-                                                        if (username.length >= 3) {
-                                                            try {
-                                                                const response = await getRequest(`/v1/userAccess/check-field/username/${username}`);
-                                                                if (response?.exists) {
-                                                                    setUsernameError('Username already exists');
-                                                                }
-                                                            } catch (error) {
-                                                                console.error('Error checking username:', error);
-                                                            }
-                                                        }
-                                                    }} 
-                                                    required 
-                                                />
-                                                {usernameError && <p className="text-xs text-red-500 mt-1">{usernameError}</p>}
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-semibold mb-1.5 text-gray-700 dark:text-gray-300">Password *</label>
-                                                <div className="relative">
-                                                    <input 
-                                                        type={showPassword ? 'text' : 'password'} 
-                                                        className={`form-input w-full pr-10 ${formSubmitted ? 'submitted' : ''}`} 
-                                                        placeholder="Password" 
-                                                        value={newUser.userPassword} 
-                                                        onChange={(e) => setNewUser({...newUser, userPassword: e.target.value})} 
-                                                        required 
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-primary"
-                                                        onClick={() => setShowPassword(!showPassword)}
-                                                    >
-                                                        {showPassword ? (
-                                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                <path d="M2 2L22 22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                                                                <path d="M6.71277 6.7226C3.66479 8.79527 2 12 2 12C2 12 5.63636 19 12 19C14.0503 19 15.8174 18.2734 17.2711 17.2884M11 5.05822C11.3254 5.02013 11.6588 5 12 5C18.3636 5 22 12 22 12C22 12 21.3082 13.3317 20 14.8335" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                                                                <path d="M14 14.2362C13.4692 14.7112 12.7684 15.0001 12 15.0001C10.3431 15.0001 9 13.657 9 12.0001C9 11.1764 9.33193 10.4303 9.86932 9.88818" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                                                            </svg>
-                                                        ) : (
-                                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                <path d="M15 12C15 13.6569 13.6569 15 12 15C10.3431 15 9 13.6569 9 12C9 10.3431 10.3431 9 12 9C13.6569 9 15 10.3431 15 12Z" stroke="currentColor" strokeWidth="1.5"/>
-                                                                <path d="M2 12C2 12 5.63636 5 12 5C18.3636 5 22 12 22 12C22 12 18.3636 19 12 19C5.63636 19 2 12 2 12Z" stroke="currentColor" strokeWidth="1.5"/>
-                                                            </svg>
-                                                        )}
-                                                    </button>
-                                                </div>
-{newUser.userPassword && !hidePasswordRules && (() => {
-                                                    const pwd = newUser.userPassword;
-                                                    const allValid = pwd.length >= 8 && /[A-Z]/.test(pwd) && /[0-9]/.test(pwd) && /[!@#$%^&*(),.?":{}|<>]/.test(pwd);
-                                                    
-                                                    if (allValid) {
-                                                        setTimeout(() => setHidePasswordRules(true), 2000);
-                                                    }
-                                                    
-                                                    return (
-                                                        <div className="mt-2">
-                                                            <style>{`
-                                                                .ReactPasswordChecklist svg {
-                                                                    width: 1.7em !important;
-                                                                    height: 1.7em !important;
-                                                                    margin-right: 0.5em !important;
-                                                                    flex-shrink: 0 !important;
-                                                                    stroke-width: 4 !important;
-                                                                }
-                                                            `}</style>
-                                                            <PasswordChecklist
-                                                                rules={["minLength", "specialChar", "number", "capital"]}
-                                                                minLength={8}
-                                                                value={pwd}
-                                                                messages={{
-                                                                    minLength: "At least 8 characters",
-                                                                    specialChar: "One special character",
-                                                                    number: "One number",
-                                                                    capital: "One uppercase letter"
-                                                                }}
-                                                            />
-                                                        </div>
-                                                    );
-                                                })()}
                                             </div>
                                         </div>
                                     </div>
