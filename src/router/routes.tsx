@@ -64,6 +64,7 @@ const componentMap = {
     'DataTables/ColumnChooser': lazy(() => import('../pages/DataTables/ColumnChooser')),
     'Users/Profile': lazy(() => import('../pages/Users/Profile')),
     'Users/AccountSetting': lazy(() => import('../pages/Users/AccountSetting')),
+    'Users/SalaryHistory': lazy(() => import('../pages/Users/SalaryHistory')),
     'Pages/KnowledgeBase': lazy(() => import('../pages/Pages/KnowledgeBase')),
     'Pages/ContactUsBoxed': lazy(() => import('../pages/Pages/ContactUsBoxed')),
     'Pages/ContactUsCover': lazy(() => import('../pages/Pages/ContactUsCover')),
@@ -109,4 +110,12 @@ const componentMap = {
     'Apps/Holidays': lazy(() => import('../pages/Apps/Holidays')),
     'Apps/HolidayManagement': lazy(() => import('../pages/Apps/HolidayManagement')),
 };
-export { componentMap };
+
+const routes = [
+    {
+        path: '/users/salary-history',
+        element: componentMap['Users/SalaryHistory'],
+    },
+];
+
+export { componentMap, routes };

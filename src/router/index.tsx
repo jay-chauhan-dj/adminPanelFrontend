@@ -64,10 +64,51 @@ const DynamicRoute = () => {
 
     console.log('Total routes loaded:', finalRoutes.length);
 
+    // Import components
+    const AccountSetting = React.lazy(() => import('../pages/Users/AccountSetting'));
+    const Profile = React.lazy(() => import('../pages/Users/Profile'));
+    const SalaryHistory = React.lazy(() => import('../pages/Users/SalaryHistory'));
+    
     const router = createBrowserRouter([
         {
             path: '/auth/login',
             element: <LoginCover />
+        },
+        {
+            path: '/profile',
+            element: (
+                <PrivateRoute>
+                    <DefaultLayout>
+                        <React.Suspense fallback={<div>Loading...</div>}>
+                            <Profile />
+                        </React.Suspense>
+                    </DefaultLayout>
+                </PrivateRoute>
+            )
+        },
+        {
+            path: '/users/user-account-settings',
+            element: (
+                <PrivateRoute>
+                    <DefaultLayout>
+                        <React.Suspense fallback={<div>Loading...</div>}>
+                            <AccountSetting />
+                        </React.Suspense>
+                    </DefaultLayout>
+                </PrivateRoute>
+            )
+        },
+        {
+            path: '/users/salary-history',
+            element: (
+                <PrivateRoute>
+                    <DefaultLayout>
+                        <React.Suspense fallback={<div>Loading...</div>}>
+                            <SalaryHistory />
+                        </React.Suspense>
+                    </DefaultLayout>
+                </PrivateRoute>
+            )
         },
         ...finalRoutes.filter((route): route is { path: string; element: JSX.Element } => route !== null),
         {
