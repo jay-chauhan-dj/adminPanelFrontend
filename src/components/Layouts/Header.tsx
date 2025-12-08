@@ -6,12 +6,15 @@ import { toggleRTL, toggleTheme, toggleSidebar } from '../../store/themeConfigSl
 import { useTranslation } from 'react-i18next';
 import i18next from 'i18next';
 import Dropdown from '../Dropdown';
+import axios from 'axios';
 
 const Header = () => {
     const location = useLocation();
     const navigate = useNavigate();
+    const [userData, setUserData] = useState<any>(null);
 
     useEffect(() => {
+        fetchUserData();
         const selector = document.querySelector('ul.horizontal-menu a[href="' + window.location.pathname + '"]');
         if (selector) {
             selector.classList.add('active');
@@ -36,6 +39,18 @@ const Header = () => {
 
     const themeConfig = useSelector((state: IRootState) => state.themeConfig);
     const dispatch = useDispatch();
+
+    const fetchUserData = async () => {
+        try {
+            const token = localStorage.getItem('accessToken');
+            const response = await axios.get('http://localhost:3000/v1/userAccess/profile', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setUserData(response.data.user);
+        } catch (error) {
+            console.error('Error fetching user data:', error);
+        }
+    };
 
     const handleSignOut = () => {
         localStorage.removeItem('accessToken'); // Remove the token from local storage
@@ -550,23 +565,21 @@ const Header = () => {
                                 <ul className="text-dark dark:text-white-dark !py-0 w-[230px] font-semibold dark:text-white-light/90">
                                     <li>
                                         <div className="flex items-center px-4 py-4">
-                                            <svg className="w-10 h-10 rounded-md p-2 bg-white-light/40 dark:bg-dark/40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <circle cx="12" cy="6" r="4" stroke="currentColor" strokeWidth="1.5" />
-                                                <path opacity="0.5" d="M20 17.5C20 19.9853 20 22 12 22C4 22 4 19.9853 4 17.5C4 15.0147 7.58172 13 12 13C16.4183 13 20 15.0147 20 17.5Z" stroke="currentColor" strokeWidth="1.5" />
-                                            </svg>
+                                            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-semibold">
+                                                {userData?.userFirstName?.[0]?.toUpperCase()}{userData?.userLastName?.[0]?.toUpperCase()}
+                                            </div>
                                             <div className="ltr:pl-4 rtl:pr-4 truncate">
                                                 <h4 className="text-base">
-                                                    Admin
-                                                    <span className="text-xs bg-success-light rounded text-success px-1 ltr:ml-2 rtl:ml-2">Pro</span>
+                                                    {userData?.userFirstName} {userData?.userLastName}
                                                 </h4>
-                                                <button type="button" className="text-black/60 hover:text-primary dark:text-dark-light/60 dark:hover:text-white">
-                                                    admin@example.com
+                                                <button type="button" className="text-black/60 hover:text-primary dark:text-dark-light/60 dark:hover:text-white text-xs">
+                                                    {userData?.userEmail}
                                                 </button>
                                             </div>
                                         </div>
                                     </li>
                                     <li>
-                                        <Link to="/users/profile" className="dark:hover:text-white">
+                                        <Link to="/profile" className="dark:hover:text-white">
                                             <svg className="ltr:mr-2 rtl:ml-2 shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                 <circle cx="12" cy="6" r="4" stroke="currentColor" strokeWidth="1.5" />
                                                 <path

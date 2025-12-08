@@ -47,7 +47,11 @@ export const postRequest = async (url: string, data = {}, params = {}, headers =
         const authHeaders = token ? { ...headers, Authorization: `Bearer ${token}` } : headers;
         const response = await axiosInstance.post(url, data, { params, headers: authHeaders });
         return response.data;
-    } catch (error) {
+    } catch (error: any) {
+        if (error.response) {
+            // Return the error response data instead of throwing
+            return error.response.data;
+        }
         handleError(error);
         throw error;
     }
@@ -60,7 +64,11 @@ export const putRequest = async (url: string, data: object, params = {}, headers
         const authHeaders = token ? { ...headers, Authorization: `Bearer ${token}` } : headers;
         const response = await axiosInstance.put(url, data, { params, headers: authHeaders });
         return response.data;
-    } catch (error) {
+    } catch (error: any) {
+        if (error.response) {
+            // Return the error response data instead of throwing
+            return error.response.data;
+        }
         handleError(error);
         throw error;
     }
@@ -117,4 +125,12 @@ const handleError = (error: any) => {
         console.error('Error Message:', error.message);
     }
     console.error('Error Config:', error.config);
+};
+
+// Export Request object for compatibility
+export const Request = {
+    get: getRequest,
+    post: postRequest,
+    put: putRequest,
+    delete: deleteRequest
 };

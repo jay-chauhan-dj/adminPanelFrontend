@@ -26,11 +26,10 @@ const RegisterFace = () => {
 
     const fetchCurrentUser = async () => {
         try {
-            const response = await getRequest(`/v1/attendance/current-user`, {}, headers);
-            const data = await response.json();
+            const data = await getRequest(`/v1/attendance/current-user`, {}, headers);
             if (data.success && data.user) {
                 if (data.user.hasBiometric) {
-                    navigate('/attendance/clock', { replace: true });
+                    navigate('/attendance/clock-in-out', { replace: true });
                     return;
                 }
                 setFormData({
@@ -90,12 +89,11 @@ const RegisterFace = () => {
 
         setLoading(true);
         try {
-            const response = await postRequest(`/v1/attendance/register-face`, { image: imageData }, {}, headers);
-            const data = await response.json();
+            const data = await postRequest(`/v1/attendance/register-face`, { image: imageData }, {}, headers);
 
-            if (response.ok && data.success) {
+            if (data.success) {
                 await Swal.fire('Success', 'Face registered successfully!', 'success');
-                navigate('/attendance/clock');
+                navigate('/attendance/clock-in-out');
             } else {
                 Swal.fire('Error', data.error || 'Failed to register face', 'error');
             }
@@ -187,7 +185,7 @@ const RegisterFace = () => {
                             <button
                                 type="button"
                                 className="btn btn-outline-secondary w-full"
-                                onClick={() => navigate('/attendance/clock')}
+                                onClick={() => navigate('/attendance/clock-in-out')}
                             >
                                 Back to Attendance
                             </button>

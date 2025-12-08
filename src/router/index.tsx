@@ -8,6 +8,8 @@ import { hasAccess } from '../utils/AccessControl';
 
 // Static imports for authentication components
 import LoginCover from '../pages/Authentication/LoginCover';
+import VerifyEmail from '../pages/Authentication/VerifyEmail';
+import RegisterCover from '../pages/Authentication/RegisterCover';
 import PrivateRoute from '../components/Layouts/PrivateRoute';
 import Error404 from '../pages/Pages/Error404';
 
@@ -64,10 +66,55 @@ const DynamicRoute = () => {
 
     console.log('Total routes loaded:', finalRoutes.length);
 
+    // Import components
+    const AccountSetting = React.lazy(() => import('../pages/Users/AccountSetting'));
+    const Profile = React.lazy(() => import('../pages/Users/Profile'));
+    const SalaryHistory = React.lazy(() => import('../pages/Users/SalaryHistory'));
+    
     const router = createBrowserRouter([
         {
             path: '/auth/login',
             element: <LoginCover />
+        },
+        {
+            path: '/profile',
+            element: (
+                <PrivateRoute>
+                    <DefaultLayout>
+                        <React.Suspense fallback={<div>Loading...</div>}>
+                            <Profile />
+                        </React.Suspense>
+                    </DefaultLayout>
+                </PrivateRoute>
+            )
+        },
+        {
+            path: '/users/user-account-settings',
+            element: (
+                <PrivateRoute>
+                    <DefaultLayout>
+                        <React.Suspense fallback={<div>Loading...</div>}>
+                            <AccountSetting />
+                        </React.Suspense>
+                    </DefaultLayout>
+                </PrivateRoute>
+            )
+        },
+        {
+            path: '/users/salary-history',
+            element: (
+                <PrivateRoute>
+                    <DefaultLayout>
+                        <React.Suspense fallback={<div>Loading...</div>}>
+                            <SalaryHistory />
+                        </React.Suspense>
+                    </DefaultLayout>
+                </PrivateRoute>
+            )
+        },
+        {
+            path: '/auth/cover-register/:email/:token',
+            element: <RegisterCover />
         },
         ...finalRoutes.filter((route): route is { path: string; element: JSX.Element } => route !== null),
         {

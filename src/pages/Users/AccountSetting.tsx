@@ -2,15 +2,168 @@ import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import { useDispatch } from 'react-redux';
+import axios from 'axios';
+import { validateUsername } from '../../utils/socialValidation';
+import ProfilePreviewModal from '../../components/ProfilePreviewModal';
 
 const AccountSetting = () => {
     const dispatch = useDispatch();
     useEffect(() => {
         dispatch(setPageTitle('Account Setting'));
-    });
+        fetchProfile();
+        fetchSocialLinks();
+    }, []);
     const [tabs, setTabs] = useState<string>('home');
     const toggleTabs = (name: string) => {
         setTabs(name);
+    };
+
+    const [formData, setFormData] = useState({
+        userFirstName: '',
+        userLastName: '',
+        userPhoneNumber: '',
+        userWhatsappNumber: '',
+        userSlackIdentifier: '',
+        userEmail: '',
+        address1: '',
+        address2: '',
+        landmark: '',
+        city: '',
+        state: '',
+        country: '',
+        postalCode: ''
+    });
+
+    const [socialLinks, setSocialLinks] = useState({
+        linkedin: '',
+        twitter: '',
+        facebook: '',
+        github: ''
+    });
+
+    const [socialErrors, setSocialErrors] = useState<{[key: string]: string}>({});
+    const [showPreview, setShowPreview] = useState(false);
+
+    const fetchProfile = async () => {
+        try {
+            const token = localStorage.getItem('accessToken');
+            const response = await axios.get('http://localhost:3000/v1/userAccess/profile', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const user = response.data.user;
+            let addressData = { 'address-1': '', 'address-2': '', landmark: '', city: '', state: '', country: '', 'postal-code': '' };
+            if (user.userAddress) {
+                try {
+                    addressData = JSON.parse(user.userAddress);
+                } catch (e) {}
+            }
+            setFormData({
+                userFirstName: user.userFirstName || '',
+                userLastName: user.userLastName || '',
+                userPhoneNumber: user.userPhoneNumber || '',
+                userWhatsappNumber: user.userWhatsappNumber || '',
+                userSlackIdentifier: user.userSlackIdentifier || '',
+                userEmail: user.userEmail || '',
+                address1: addressData['address-1'] || '',
+                address2: addressData['address-2'] || '',
+                landmark: addressData.landmark || '',
+                city: addressData.city || '',
+                state: addressData.state || '',
+                country: addressData.country || '',
+                postalCode: addressData['postal-code'] || ''
+            });
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        }
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const token = localStorage.getItem('accessToken');
+            const addressObj = {
+                'address-1': formData.address1,
+                'address-2': formData.address2,
+                landmark: formData.landmark,
+                city: formData.city,
+                state: formData.state,
+                country: formData.country,
+                'postal-code': formData.postalCode
+            };
+            await axios.put('http://localhost:3000/v1/userAccess/profile', {
+                userFirstName: formData.userFirstName,
+                userLastName: formData.userLastName,
+                userPhoneNumber: formData.userPhoneNumber,
+                userWhatsappNumber: formData.userWhatsappNumber,
+                userSlackIdentifier: formData.userSlackIdentifier,
+                userAddress: JSON.stringify(addressObj)
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            alert('Profile updated successfully!');
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            alert('Failed to update profile');
+        }
+    };
+
+    const fetchSocialLinks = async () => {
+        try {
+            const token = localStorage.getItem('accessToken');
+            const response = await axios.get('http://localhost:3000/v1/social/my-links', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setSocialLinks({
+                linkedin: response.data.socialLinks.linkedin || '',
+                twitter: response.data.socialLinks.twitter || '',
+                facebook: response.data.socialLinks.facebook || '',
+                github: response.data.socialLinks.github || ''
+            });
+        } catch (error) {
+            console.error('Error fetching social links:', error);
+        }
+    };
+
+    const handleSocialChange = (platform: string, value: string) => {
+        setSocialLinks({ ...socialLinks, [platform]: value });
+        if (value.trim()) {
+            const validation = validateUsername(platform, value);
+            if (!validation.valid) {
+                setSocialErrors({ ...socialErrors, [platform]: validation.message || '' });
+            } else {
+                const newErrors = { ...socialErrors };
+                delete newErrors[platform];
+                setSocialErrors(newErrors);
+            }
+        } else {
+            const newErrors = { ...socialErrors };
+            delete newErrors[platform];
+            setSocialErrors(newErrors);
+        }
+    };
+
+    const handleSocialSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (Object.keys(socialErrors).length > 0) {
+            alert('Please fix validation errors before saving');
+            return;
+        }
+        try {
+            const token = localStorage.getItem('accessToken');
+            const response = await axios.put('http://localhost:3000/v1/social/update', {
+                linkedin: socialLinks.linkedin.replace('@', '').trim(),
+                twitter: socialLinks.twitter.replace('@', '').trim(),
+                facebook: socialLinks.facebook.replace('@', '').trim(),
+                github: socialLinks.github.replace('@', '').trim()
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            alert('Social links updated successfully!');
+        } catch (error: any) {
+            console.error('Error updating social links:', error);
+            const errorMsg = error.response?.data?.message || 'Failed to update social links';
+            alert(errorMsg);
+        }
     };
 
     return (
@@ -103,151 +256,140 @@ const AccountSetting = () => {
                 </div>
                 {tabs === 'home' ? (
                     <div>
-                        <form className="border border-[#ebedf2] dark:border-[#191e3a] rounded-md p-4 mb-5 bg-white dark:bg-black">
+                        <form onSubmit={handleSubmit} className="border border-[#ebedf2] dark:border-[#191e3a] rounded-md p-4 mb-5 bg-white dark:bg-black">
                             <h6 className="text-lg font-bold mb-5">General Information</h6>
                             <div className="flex flex-col sm:flex-row">
                                 <div className="ltr:sm:mr-4 rtl:sm:ml-4 w-full sm:w-2/12 mb-5">
-                                    <img src="/assets//images/profile-34.jpeg" alt="img" className="w-20 h-20 md:w-32 md:h-32 rounded-full object-cover mx-auto" />
+                                    <div className="w-20 h-20 md:w-32 md:h-32 rounded-full bg-primary flex items-center justify-center text-white text-2xl md:text-4xl font-bold mx-auto">
+                                        {formData.userFirstName?.[0]?.toUpperCase()}{formData.userLastName?.[0]?.toUpperCase()}
+                                    </div>
                                 </div>
                                 <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-5">
                                     <div>
-                                        <label htmlFor="name">Full Name</label>
-                                        <input id="name" type="text" placeholder="Jimmy Turner" className="form-input" />
+                                        <label htmlFor="firstName">First Name</label>
+                                        <input id="firstName" type="text" value={formData.userFirstName} onChange={(e) => setFormData({...formData, userFirstName: e.target.value})} className="form-input" />
                                     </div>
                                     <div>
-                                        <label htmlFor="profession">Profession</label>
-                                        <input id="profession" type="text" placeholder="Web Developer" className="form-input" />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="country">Country</label>
-                                        <select defaultValue="United States" id="country" className="form-select text-white-dark">
-                                            <option value="All Countries">All Countries</option>
-                                            <option value="United States">United States</option>
-                                            <option value="India">India</option>
-                                            <option value="Japan">Japan</option>
-                                            <option value="China">China</option>
-                                            <option value="Brazil">Brazil</option>
-                                            <option value="Norway">Norway</option>
-                                            <option value="Canada">Canada</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label htmlFor="address">Address</label>
-                                        <input id="address" type="text" placeholder="New York" className="form-input" />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="location">Location</label>
-                                        <input id="location" type="text" placeholder="Location" className="form-input" />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="phone">Phone</label>
-                                        <input id="phone" type="text" placeholder="+1 (530) 555-12121" className="form-input" />
+                                        <label htmlFor="lastName">Last Name</label>
+                                        <input id="lastName" type="text" value={formData.userLastName} onChange={(e) => setFormData({...formData, userLastName: e.target.value})} className="form-input" />
                                     </div>
                                     <div>
                                         <label htmlFor="email">Email</label>
-                                        <input id="email" type="email" placeholder="Jimmy@gmail.com" className="form-input" />
+                                        <input id="email" type="email" value={formData.userEmail} disabled className="form-input bg-gray-100 dark:bg-gray-800" />
                                     </div>
                                     <div>
-                                        <label htmlFor="web">Website</label>
-                                        <input id="web" type="text" placeholder="Enter URL" className="form-input" />
+                                        <label htmlFor="phone">Phone</label>
+                                        <input id="phone" type="text" value={formData.userPhoneNumber} onChange={(e) => setFormData({...formData, userPhoneNumber: e.target.value})} className="form-input" />
                                     </div>
                                     <div>
-                                        <label className="inline-flex cursor-pointer">
-                                            <input type="checkbox" className="form-checkbox" />
-                                            <span className="text-white-dark relative checked:bg-none">Make this my default address</span>
-                                        </label>
+                                        <label htmlFor="whatsapp">WhatsApp Number</label>
+                                        <input id="whatsapp" type="text" value={formData.userWhatsappNumber} onChange={(e) => setFormData({...formData, userWhatsappNumber: e.target.value})} className="form-input" />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="slack">Slack Identifier</label>
+                                        <input id="slack" type="text" value={formData.userSlackIdentifier} onChange={(e) => setFormData({...formData, userSlackIdentifier: e.target.value})} className="form-input" />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="address1">Address Line 1</label>
+                                        <input id="address1" type="text" value={formData.address1} onChange={(e) => setFormData({...formData, address1: e.target.value})} className="form-input" />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="address2">Address Line 2</label>
+                                        <input id="address2" type="text" value={formData.address2} onChange={(e) => setFormData({...formData, address2: e.target.value})} className="form-input" />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="landmark">Landmark</label>
+                                        <input id="landmark" type="text" value={formData.landmark} onChange={(e) => setFormData({...formData, landmark: e.target.value})} className="form-input" />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="city">City</label>
+                                        <input id="city" type="text" value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} className="form-input" />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="state">State</label>
+                                        <input id="state" type="text" value={formData.state} onChange={(e) => setFormData({...formData, state: e.target.value})} className="form-input" />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="country">Country</label>
+                                        <input id="country" type="text" value={formData.country} onChange={(e) => setFormData({...formData, country: e.target.value})} className="form-input" />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="postalCode">Postal Code</label>
+                                        <input id="postalCode" type="text" value={formData.postalCode} onChange={(e) => setFormData({...formData, postalCode: e.target.value})} className="form-input" />
                                     </div>
                                     <div className="sm:col-span-2 mt-3">
-                                        <button type="button" className="btn btn-primary">
+                                        <button type="submit" className="btn btn-primary">
                                             Save
                                         </button>
                                     </div>
                                 </div>
                             </div>
                         </form>
-                        <form className="border border-[#ebedf2] dark:border-[#191e3a] rounded-md p-4 bg-white dark:bg-black">
+                        <form onSubmit={handleSocialSubmit} className="border border-[#ebedf2] dark:border-[#191e3a] rounded-md p-4 bg-white dark:bg-black">
                             <h6 className="text-lg font-bold mb-5">Social</h6>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                <div className="flex">
-                                    <div className="bg-[#eee] flex justify-center items-center rounded px-3 font-semibold dark:bg-[#1b2e4b] ltr:mr-2 rtl:ml-2">
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="24px"
-                                            height="24px"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="1.5"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            className="w-5 h-5"
-                                        >
-                                            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
-                                            <rect x="2" y="9" width="4" height="12"></rect>
-                                            <circle cx="4" cy="4" r="2"></circle>
-                                        </svg>
+                                <div>
+                                    <div className="flex">
+                                        <div className="bg-[#eee] flex justify-center items-center rounded px-3 font-semibold dark:bg-[#1b2e4b] ltr:mr-2 rtl:ml-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                                                <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+                                                <rect x="2" y="9" width="4" height="12"></rect>
+                                                <circle cx="4" cy="4" r="2"></circle>
+                                            </svg>
+                                        </div>
+                                        <input type="text" placeholder="john-smith" value={socialLinks.linkedin} onChange={(e) => handleSocialChange('linkedin', e.target.value)} className="form-input" />
                                     </div>
-                                    <input type="text" placeholder="jimmy_turner" className="form-input" />
+                                    {socialErrors.linkedin && <p className="text-danger text-xs mt-1">{socialErrors.linkedin}</p>}
                                 </div>
-                                <div className="flex">
-                                    <div className="bg-[#eee] flex justify-center items-center rounded px-3 font-semibold dark:bg-[#1b2e4b] ltr:mr-2 rtl:ml-2">
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="24px"
-                                            height="24px"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="1.5"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            className="w-5 h-5"
-                                        >
-                                            <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path>
-                                        </svg>
+                                <div>
+                                    <div className="flex">
+                                        <div className="bg-[#eee] flex justify-center items-center rounded px-3 font-semibold dark:bg-[#1b2e4b] ltr:mr-2 rtl:ml-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                                                <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path>
+                                            </svg>
+                                        </div>
+                                        <input type="text" placeholder="@johnsmith" value={socialLinks.twitter} onChange={(e) => handleSocialChange('twitter', e.target.value)} className="form-input" />
                                     </div>
-                                    <input type="text" placeholder="jimmy_turner" className="form-input" />
+                                    {socialErrors.twitter && <p className="text-danger text-xs mt-1">{socialErrors.twitter}</p>}
                                 </div>
-                                <div className="flex">
-                                    <div className="bg-[#eee] flex justify-center items-center rounded px-3 font-semibold dark:bg-[#1b2e4b] ltr:mr-2 rtl:ml-2">
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="24px"
-                                            height="24px"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="1.5"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            className="w-5 h-5"
-                                        >
-                                            <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
-                                        </svg>
+                                <div>
+                                    <div className="flex">
+                                        <div className="bg-[#eee] flex justify-center items-center rounded px-3 font-semibold dark:bg-[#1b2e4b] ltr:mr-2 rtl:ml-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                                                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+                                            </svg>
+                                        </div>
+                                        <input type="text" placeholder="john.smith" value={socialLinks.facebook} onChange={(e) => handleSocialChange('facebook', e.target.value)} className="form-input" />
                                     </div>
-                                    <input type="text" placeholder="jimmy_turner" className="form-input" />
+                                    {socialErrors.facebook && <p className="text-danger text-xs mt-1">{socialErrors.facebook}</p>}
                                 </div>
-                                <div className="flex">
-                                    <div className="bg-[#eee] flex justify-center items-center rounded px-3 font-semibold dark:bg-[#1b2e4b] ltr:mr-2 rtl:ml-2">
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="24px"
-                                            height="24px"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="1.5"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            className="w-5 h-5"
-                                        >
-                                            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
-                                        </svg>
+                                <div>
+                                    <div className="flex">
+                                        <div className="bg-[#eee] flex justify-center items-center rounded px-3 font-semibold dark:bg-[#1b2e4b] ltr:mr-2 rtl:ml-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                                                <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                                            </svg>
+                                        </div>
+                                        <input type="text" placeholder="johnsmith" value={socialLinks.github} onChange={(e) => handleSocialChange('github', e.target.value)} className="form-input" />
                                     </div>
-                                    <input type="text" placeholder="jimmy_turner" className="form-input" />
+                                    {socialErrors.github && <p className="text-danger text-xs mt-1">{socialErrors.github}</p>}
                                 </div>
                             </div>
+                            <div className="flex gap-2 mt-5">
+                                <button type="button" onClick={() => setShowPreview(true)} className="btn btn-outline-primary">
+                                    Preview Profile
+                                </button>
+                                <button type="submit" className="btn btn-primary">
+                                    Save Changes
+                                </button>
+                            </div>
                         </form>
+                        <ProfilePreviewModal 
+                            isOpen={showPreview} 
+                            onClose={() => setShowPreview(false)} 
+                            socialLinks={socialLinks}
+                            userName={`${formData.userFirstName} ${formData.userLastName}`}
+                        />
                     </div>
                 ) : (
                     ''
