@@ -2,8 +2,9 @@ import { Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { getRequest } from '../../utils/Request';
 import { config } from '../../config';
+import Logger from '../../utils/Logger';
 
 const SalaryHistory = () => {
     const dispatch = useDispatch();
@@ -19,14 +20,10 @@ const SalaryHistory = () => {
     
     const fetchSalaryHistory = async () => {
         try {
-            const token = localStorage.getItem('accessToken');
-            if (!token) return;
-            const response = await axios.get(`${config.API_BASE_URL}v1/userAccess/salary-history`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setSalaryHistory(response.data.salaries || []);
+            const response = await getRequest('v1/userAccess/salary-history');
+            setSalaryHistory(response.salaries || []);
         } catch (error: any) {
-            console.error('Error fetching salary history:', error);
+            Logger.error('Error fetching salary history:', error);
         } finally {
             setLoading(false);
         }
@@ -197,7 +194,8 @@ const SalaryHistory = () => {
                                 <div className="space-y-2">
                                     <div className="flex justify-between">
                                         <span className="text-white-dark">PF</span>
-                                        <span className="font-semibold text-danger">{parseFloat(selectedSalary.salaryPF || 0).toLocaleString()}</span>
+                                        <span className="font-semibold text-danger">
+                                            {parseFloat(selectedSalary.salaryPF || 0).toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-white-dark">Tax (TDS)</span>

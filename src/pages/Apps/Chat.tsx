@@ -91,11 +91,54 @@ const Chat = () => {
     const [pollingInterval, setPollingInterval] = useState<any>(null);
     const [backgroundPolling, setBackgroundPolling] = useState<any>(null);
 
+    const parseCustomDate = (dateStr: string): number => {
+        const months: { [key: string]: number } = {
+            'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+            'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+        };
+        const match = dateStr.match(/(\d+)\s+(\w+)\s+(\d+),\s+(\d+):(\d+)\s+(am|pm)/i);
+        if (!match) return 0;
+        const [, day, month, year, hour, minute, period] = match;
+        let hours = parseInt(hour);
+        if (period.toLowerCase() === 'pm' && hours !== 12) hours += 12;
+        if (period.toLowerCase() === 'am' && hours === 12) hours = 0;
+        return new Date(parseInt(year), months[month], parseInt(day), hours, parseInt(minute)).getTime();
+    };
+
+    const sortContactsByLatestMessage = (contacts: any[]) => {
+        const getLatestMessage = (contact: any) => {
+            if (!contact.messages || Object.keys(contact.messages).length === 0) return { timestamp: 0, time: '' };
+            let latestTime = 0;
+            let latestTimeStr = '';
+            Object.values(contact.messages).forEach((msgs: any) => {
+                msgs.forEach((msg: any) => {
+                    if (msg.time) {
+                        const timestamp = parseCustomDate(msg.time);
+                        if (timestamp > latestTime) {
+                            latestTime = timestamp;
+                            latestTimeStr = msg.time;
+                        }
+                    }
+                });
+            });
+            return { timestamp: latestTime, time: latestTimeStr };
+        };
+
+        contacts.forEach(contact => {
+            const latest = getLatestMessage(contact);
+            contact.time = latest.time;
+            contact._sortTimestamp = latest.timestamp;
+        });
+
+        return contacts.sort((a, b) => (b._sortTimestamp || 0) - (a._sortTimestamp || 0));
+    };
+
     const updateMessagesList = async () => {
         try {
             const response = await getRequest("/v1/whatsapp/getWhatsappMessages", {}, headers);
-            setContactList(response);
-            setFilteredItems(response);
+            const sortedContacts = sortContactsByLatestMessage(response);
+            setContactList(sortedContacts);
+            setFilteredItems(sortedContacts);
         } catch (e) {}
     };
 
@@ -157,8 +200,9 @@ const Chat = () => {
                 if (data.type === 'message:new') {
                     setTimeout(async () => {
                         const response = await getRequest(`/v1/whatsapp/getWhatsappMessages`, {}, headers);
-                        setContactList(response);
-                        setFilteredItems(response);
+                        const sortedContacts = sortContactsByLatestMessage(response);
+                        setContactList(sortedContacts);
+                        setFilteredItems(sortedContacts);
                         scrollToBottom();
                     }, 500);
                 }
@@ -169,8 +213,9 @@ const Chat = () => {
                 const interval = setInterval(async () => {
                     try {
                         const response = await getRequest(`/v1/whatsapp/getWhatsappMessages`, {}, headers);
-                        setContactList(response);
-                        setFilteredItems(response);
+                        const sortedContacts = sortContactsByLatestMessage(response);
+                        setContactList(sortedContacts);
+                        setFilteredItems(sortedContacts);
                     } catch (e) {}
                 }, 3000);
                 setPollingInterval(interval);
@@ -181,8 +226,9 @@ const Chat = () => {
             const interval = setInterval(async () => {
                 try {
                     const response = await getRequest(`/v1/whatsapp/getWhatsappMessages`, {}, headers);
-                    setContactList(response);
-                    setFilteredItems(response);
+                    const sortedContacts = sortContactsByLatestMessage(response);
+                    setContactList(sortedContacts);
+                    setFilteredItems(sortedContacts);
                 } catch (e) {}
             }, 3000);
             setPollingInterval(interval);
@@ -237,8 +283,9 @@ const Chat = () => {
             if (response.status === "success") {
                 setTimeout(async () => {
                     const updatedMessages = await getRequest("/v1/whatsapp/getWhatsappMessages", {}, headers);
-                    setContactList(updatedMessages);
-                    setFilteredItems(updatedMessages);
+                    const sortedContacts = sortContactsByLatestMessage(updatedMessages);
+                    setContactList(sortedContacts);
+                    setFilteredItems(sortedContacts);
                     scrollToBottom();
                 }, 300);
             } else {
@@ -411,26 +458,22 @@ const Chat = () => {
                                                     }`}
                                                 onClick={() => selectUser(person)}
                                             >
-                                                <div className="flex-1">
-                                                    <div className="flex items-center">
-                                                        <div className="flex-shrink-0 relative">
-                                                            <img src={`${person.path}`} className="rounded-full h-12 w-12 object-cover" alt="" />
-                                                            {person.active && (
-                                                                <div>
-                                                                    <div className="absolute bottom-0 ltr:right-0 rtl:left-0">
-                                                                        <div className="w-4 h-4 bg-success rounded-full"></div>
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                        <div className="mx-3 ltr:text-left rtl:text-right">
-                                                            <p className="mb-1 font-semibold">{person.name}</p>
-                                                            <p className="text-xs text-white-dark truncate max-w-[185px]">{person.preview}</p>
-                                                        </div>
+                                                <div className="flex items-center flex-1 min-w-0">
+                                                    <div className="flex-shrink-0 relative">
+                                                        <img src={`${person.path}`} className="rounded-full h-12 w-12 object-cover" alt="" />
+                                                    </div>
+                                                    <div className="mx-3 ltr:text-left rtl:text-right flex-1 min-w-0">
+                                                        <p className="mb-1 font-semibold truncate">{person.name}</p>
+                                                        <p className="text-xs text-white-dark truncate">{person.preview}</p>
                                                     </div>
                                                 </div>
-                                                <div className="font-semibold whitespace-nowrap text-xs">
-                                                    <p>{person.time}</p>
+                                                <div className="flex flex-col items-end gap-1 flex-shrink-0 ml-2">
+                                                    <p className="font-semibold whitespace-nowrap text-xs">{person.time}</p>
+                                                    {person.unreadCount > 0 && (
+                                                        <span className="bg-primary text-white text-xs font-semibold rounded-full h-5 min-w-[20px] px-1.5 flex items-center justify-center">
+                                                            {person.unreadCount}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </button>
                                         </div>
@@ -581,9 +624,6 @@ const Chat = () => {
                                     </button>
                                     <div className="relative flex-none">
                                         <img src={`${selectedUser.path}`} className="rounded-full w-10 h-10 sm:h-12 sm:w-12 object-cover" alt="Profile Inage" />
-                                        <div className="absolute bottom-0 ltr:right-0 rtl:left-0">
-                                            <div className="w-4 h-4 bg-success rounded-full"></div>
-                                        </div>
                                     </div>
                                     <div className="mx-3">
                                         <p className="font-semibold">{selectedUser.name}</p>
