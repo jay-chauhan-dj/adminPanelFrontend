@@ -6,6 +6,7 @@ import ReactApexChart from 'react-apexcharts';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import Dropdown from '../components/Dropdown';
 import { setPageTitle } from '../store/themeConfigSlice';
+import { getRequest } from '../utils/Request';
 
 const Index = () => {
     const dispatch = useDispatch();
@@ -16,6 +17,32 @@ const Index = () => {
     const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl' ? true : false;
 
     const [loading] = useState(false);
+    const [reports, setReports] = useState<any[]>([]);
+    const [loadingReports, setLoadingReports] = useState(true);
+    const [reportError, setReportError] = useState('');
+
+    useEffect(() => {
+        fetchReports();
+    }, []);
+
+    const fetchReports = async () => {
+        try {
+            const response = await getRequest('v1/reports/monthly-reports', {}, {}, true);
+            console.log('Reports response:', response);
+            if (response && response.reports) {
+                setReports(response.reports);
+            } else if (Array.isArray(response)) {
+                setReports(response);
+            } else {
+                setReports([]);
+            }
+        } catch (error: any) {
+            console.error('Failed to fetch reports:', error);
+            setReportError(error?.response?.data?.message || 'Failed to load reports');
+        } finally {
+            setLoadingReports(false);
+        }
+    };
 
     //Revenue Chart
     const revenueChart: any = {
@@ -387,6 +414,12 @@ const Index = () => {
         },
     };
 
+    const formatDate = (dateString: string) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+    };
+
     return (
         <div>
             <ul className="flex space-x-2 rtl:space-x-reverse">
@@ -396,10 +429,65 @@ const Index = () => {
                     </Link>
                 </li>
                 <li className="before:content-['/'] ltr:before:mr-2 rtl:before:ml-2">
-                    <span>Sales</span>
+                    <span>Home</span>
                 </li>
             </ul>
 
+            <div className="pt-5">
+                <h5 className="font-semibold text-xl dark:text-white-light mb-5">My Monthly Reports</h5>
+                {loadingReports ? (
+                    <div className="panel mb-6">
+                        <div className="flex items-center justify-center h-32">
+                            <span className="animate-spin border-2 border-primary !border-l-transparent rounded-full w-8 h-8 inline-flex"></span>
+                            <span className="ml-3 text-white-dark">Loading reports...</span>
+                        </div>
+                    </div>
+                ) : reportError ? (
+                    <div className="panel mb-6">
+                        <div className="text-center py-8">
+                            <p className="text-danger">{reportError}</p>
+                        </div>
+                    </div>
+                ) : reports.length > 0 ? (
+                    <div className="mb-6 space-y-4">
+                        {reports.map((report: any, index: number) => (
+                            <div key={index} className="panel">
+                                <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                        <h6 className="font-semibold text-base mb-3">
+                                            {formatDate(`${report.reportYear}-${report.reportMonth}-01`)} Report
+                                        </h6>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                            <div>
+                                                <span className="text-white-dark">Worked Days:</span>
+                                                <span className="font-semibold ml-2 text-success">{report.reportWorkedDays || 0}</span>
+                                            </div>
+                                            <div>
+                                                <span className="text-white-dark">Total Hours:</span>
+                                                <span className="font-semibold ml-2 text-primary">{report.reportTotalWorkingHours || 0}h</span>
+                                            </div>
+                                            <div>
+                                                <span className="text-white-dark">Leaves:</span>
+                                                <span className="font-semibold ml-2 text-warning">{report.reportLeavesTaken || 0}</span>
+                                            </div>
+                                            <div>
+                                                <span className="text-white-dark">Absent:</span>
+                                                <span className="font-semibold ml-2 text-danger">{report.reportAbsentDays || 0}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="panel mb-6">
+                        <div className="text-center py-8">
+                            <p className="text-white-dark">No reports available</p>
+                        </div>
+                    </div>
+                )}
+            </div>
             <div className="pt-5">
                 <div className="grid xl:grid-cols-3 gap-6 mb-6">
                     <div className="panel h-full xl:col-span-2">
