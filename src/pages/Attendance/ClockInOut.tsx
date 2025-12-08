@@ -63,8 +63,7 @@ const ClockInOut = () => {
 
     const checkBiometric = async () => {
         try {
-            const response = await getRequest("/v1/attendance/current-user", {}, headers);
-            const data = await response.json();
+            const data = await getRequest("/v1/attendance/current-user", {}, headers);
             if (data.success) {
                 setHasBiometric(data.user.hasBiometric);
             }
@@ -105,8 +104,7 @@ const ClockInOut = () => {
         if (result.isConfirmed) {
             try {
                 const token = localStorage.getItem('accessToken');
-                const response = await getRequest(`/v1/attendance/delete-face`, {}, headers);
-                const data = await response.json();
+                const data = await getRequest(`/v1/attendance/delete-face`, {}, headers);
                 if (data.success) {
                     await Swal.fire('Deleted!', 'Your face data has been deleted.', 'success');
                     setHasBiometric(false);
@@ -195,20 +193,13 @@ const ClockInOut = () => {
                 latitude: location.latitude,
                 longitude: location.longitude
             }
-            const response = await postRequest(`/v1/attendance/clock`, requestData, {}, headers);
-            const data = await response.json();
+            const data = await postRequest(`/v1/attendance/clock`, requestData, {}, headers);
 
-            if (response.ok && data.success) {
-                if (selectedAction === 'clock_in') {
-                    setClockInTimestamp(Date.now());
-                } else {
-                    setClockInTimestamp(null);
-                    setOnBreak(false);
-                }
+            if (data.success) {
                 setLastAttendance(data.attendance);
                 Swal.fire('Success', data.message, 'success');
             } else {
-                if (response.status === 404 && data.error === 'Unknown face') {
+                if (data.error === 'Unknown face') {
                     const result = await Swal.fire({
                         title: 'Face Not Registered',
                         text: 'Your face is not registered. Would you like to register now?',
