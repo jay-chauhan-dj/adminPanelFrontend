@@ -8,6 +8,8 @@ import { hasAccess } from '../utils/AccessControl';
 
 // Static imports for authentication components
 import LoginCover from '../pages/Authentication/LoginCover';
+import VerifyEmail from '../pages/Authentication/VerifyEmail';
+import RegisterCover from '../pages/Authentication/RegisterCover';
 import PrivateRoute from '../components/Layouts/PrivateRoute';
 import Error404 from '../pages/Pages/Error404';
 
@@ -109,6 +111,10 @@ const DynamicRoute = () => {
                     </DefaultLayout>
                 </PrivateRoute>
             )
+        },
+        {
+            path: '/auth/cover-register/:email/:token',
+            element: <RegisterCover />
         },
         ...finalRoutes.filter((route): route is { path: string; element: JSX.Element } => route !== null),
         {
