@@ -63,9 +63,7 @@ export default function InvoiceUpload() {
     data.append("file", file);
 
     try {
-      // 🔹 yaha se token nikaal rahe (common case: "token" key)
-      // Agar tumhare project me key kuch aur ho (jaise "accessToken"),
-      // to yahi line me naam change karna hoga.
+
       const token =
         localStorage.getItem("token") ||
         localStorage.getItem("accessToken") ||
@@ -78,7 +76,6 @@ export default function InvoiceUpload() {
         },
       });
 
-      // 🔹 hamara backend abhi `message` + `file` object bhej raha hai
       const fileName =
         res.data?.file?.storedName ||
         res.data?.file?.originalName ||
