@@ -467,12 +467,12 @@ const Chat = () => {
                                                         <img src={`${person.path}`} className="rounded-full h-12 w-12 object-cover" alt="" />
                                                     </div>
                                                     <div className="mx-3 ltr:text-left rtl:text-right flex-1 min-w-0">
-                                                        <p className="mb-1 font-semibold truncate">{person.name}</p>
+                                                        <p className="mb-1 font-semibold">{person.name}</p>
                                                         <p className="text-xs text-white-dark truncate">{person.preview}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex flex-col items-end gap-1 flex-shrink-0 ml-2">
-                                                    <p className="font-semibold whitespace-nowrap text-xs">{person.time}</p>
+                                                    <p className="font-semibold whitespace-nowrap text-xs">{person.time ? new Date(person.time.includes(',') ? person.time : Date.now()).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : ''}</p>
                                                     {person.unreadCount > 0 && (
                                                         <span className="bg-primary text-white text-xs font-semibold rounded-full h-5 min-w-[20px] px-1.5 flex items-center justify-center">
                                                             {person.unreadCount}
