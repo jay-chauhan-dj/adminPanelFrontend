@@ -136,10 +136,14 @@ const Chat = () => {
     const updateMessagesList = async () => {
         try {
             const response = await getRequest("/v1/whatsapp/getWhatsappMessages", {}, headers);
+            console.log('API Response:', response);
             const sortedContacts = sortContactsByLatestMessage(response);
             setContactList(sortedContacts);
             setFilteredItems(sortedContacts);
-        } catch (e) {}
+        } catch (e) {
+            console.error('Failed to load contacts:', e);
+            errorToster('Failed to load chat contacts');
+        }
     };
 
     useEffect(() => {
