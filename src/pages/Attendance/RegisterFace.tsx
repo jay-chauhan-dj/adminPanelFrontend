@@ -3,11 +3,7 @@ import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
-<<<<<<< HEAD
-import { getRequest, postRequest } from '../../utils/Request';
-=======
 import { postRequest, getRequest } from '../../utils/Request';
->>>>>>> dev-005
 
 const RegisterFace = () => {
     const dispatch = useDispatch();
@@ -19,14 +15,10 @@ const RegisterFace = () => {
     const [formData, setFormData] = useState({ name: '', employee_code: '', userId: '' });
     const [userLoading, setUserLoading] = useState(true);
     const token = localStorage.getItem('accessToken');
-<<<<<<< HEAD
-    const headers = { 'Authorization': `Bearer ${token}` };
-=======
     const headers = { 
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
     };
->>>>>>> dev-005
 
     useEffect(() => {
         dispatch(setPageTitle('Register Face'));

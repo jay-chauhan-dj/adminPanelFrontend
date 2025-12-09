@@ -5,6 +5,18 @@ import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { getRequest, postRequest } from '../../utils/Request';
 
+const LiveTime = ({ baseTime }: { baseTime?: string }) => {
+    const [time, setTime] = useState('');
+
+    useEffect(() => {
+        if (!baseTime) return;
+        const date = new Date(baseTime);
+        setTime(date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }));
+    }, [baseTime]);
+
+    return <>{time}</>;
+};
+
 const ClockInOut = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -16,8 +28,6 @@ const ClockInOut = () => {
     const [action, setAction] = useState<'clock_in' | 'clock_out'>('clock_in');
     const [lastAttendance, setLastAttendance] = useState<any>(null);
     const [hasBiometric, setHasBiometric] = useState<boolean | null>(null);
-    const token = localStorage.getItem('accessToken');
-    const headers = { 'Authorization': `Bearer ${token}` };
     const [onBreak, setOnBreak] = useState(false);
     const [breakLoading, setBreakLoading] = useState(false);
     const [elapsedTime, setElapsedTime] = useState('00:00:00');
@@ -39,19 +49,21 @@ const ClockInOut = () => {
     }, []);
 
     useEffect(() => {
-        if (!lastAttendance?.clock_in_time || lastAttendance?.clock_out_time) {
+        if (!lastAttendance?.clock_in_time) {
             setElapsedTime('00:00:00');
-            setClockInTimestamp(null);
             return;
         }
         
-        if (!clockInTimestamp) {
-            setClockInTimestamp(Date.now());
-        }
-        
         const updateTimer = () => {
-            if (!clockInTimestamp) return;
-            const diff = Math.floor((Date.now() - clockInTimestamp) / 1000);
+            const clockInTime = new Date(lastAttendance.clock_in_time).getTime();
+            const endTime = lastAttendance?.clock_out_time ? new Date(lastAttendance.clock_out_time).getTime() : Date.now();
+            const diff = Math.floor((endTime - clockInTime) / 1000);
+            
+            if (diff < 0) {
+                setElapsedTime('00:00:00');
+                return;
+            }
+            
             const hours = Math.floor(diff / 3600);
             const minutes = Math.floor((diff % 3600) / 60);
             const seconds = diff % 60;
@@ -59,10 +71,12 @@ const ClockInOut = () => {
         };
         
         updateTimer();
-        const interval = setInterval(updateTimer, 1000);
         
-        return () => clearInterval(interval);
-    }, [lastAttendance, clockInTimestamp]);
+        if (!lastAttendance?.clock_out_time) {
+            const interval = setInterval(updateTimer, 1000);
+            return () => clearInterval(interval);
+        }
+    }, [lastAttendance?.clock_in_time, lastAttendance?.clock_out_time]);
 
     const checkBiometric = async () => {
         try {
@@ -250,7 +264,7 @@ const ClockInOut = () => {
 
     return (
         <div>
-            <div className="mb-6">
+             <div className="mb-6">
                 <h2 className="text-2xl font-bold">Attendance System</h2>
                 <p className="text-gray-500 dark:text-gray-400">Mark your attendance with face recognition</p>
             </div>
@@ -399,9 +413,9 @@ const ClockInOut = () => {
                         <div className="panel">
                             <h5 className="font-semibold text-lg mb-4">Today's Attendance</h5>
                             <div className="space-y-3">
-                                {lastAttendance.clock_in_time && !lastAttendance.clock_out_time && (
+                                {lastAttendance.clock_in_time && (
                                     <div className="p-5 bg-primary rounded-lg text-white text-center">
-                                        <div className="text-xs uppercase tracking-widest mb-3 opacity-80 font-semibold">Working Time</div>
+                                        <div className="text-xs uppercase tracking-widest mb-3 opacity-80 font-semibold">{lastAttendance.clock_out_time ? 'Total Working Time' : 'Working Time'}</div>
                                         <div className="text-5xl font-bold font-mono tabular-nums">{elapsedTime}</div>
                                     </div>
                                 )}
