@@ -23,6 +23,7 @@ interface RouteConfig {
     path: string;
     componentLocation: string;
     requiredAccess?: string;
+    menuTitles?: string[];
     layout?: string;
 }
 
@@ -50,7 +51,7 @@ const DynamicRoute = () => {
             }
 
             const routeElement = (
-                <PrivateRoute requiredAccess={route.requiredAccess}>
+                <PrivateRoute requiredAccess={route.requiredAccess} menuTitles={route.menuTitles}>
                     {route.layout === 'blank' ?
                         <BlankLayout><Component /></BlankLayout> :
                         <DefaultLayout><Component /></DefaultLayout>

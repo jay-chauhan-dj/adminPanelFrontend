@@ -5,9 +5,10 @@ import { isLoggedIn } from '../../utils/Request';
 interface PrivateRouteProps {
   children: React.ReactNode;
   requiredAccess?: string;
+  menuTitles?: string[];
 }
 
-const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, requiredAccess }) => {
+const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, requiredAccess, menuTitles }) => {
   if (!isLoggedIn()) {
     return <Navigate to="/auth/login" replace />;
   }
@@ -15,24 +16,31 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, requiredAccess })
   if (requiredAccess) {
     const role = localStorage.getItem('userRole');
     
-    // Handle admin access requirement
-    if (requiredAccess === 'admin') {
-      if (role && role.toLowerCase() === 'admin') {
-        return children;
-      }
-      return <Navigate to="/" replace />;
-    }
-    
     // Admin users have access to everything
     if (role && role.toLowerCase() === 'admin') {
-      return children;
+      return <>{children}</>;
+    }
+    
+    // Dashboard is always accessible
+    if (requiredAccess === 'dashboard') {
+      return <>{children}</>;
     }
     
     const accessStr = localStorage.getItem('userAccess');
     if (accessStr) {
       try {
-        const access = JSON.parse(accessStr);
-        if (access && access.includes(requiredAccess)) {
+        const userAccess = JSON.parse(accessStr);
+        
+        // Check if user has any of the menu titles associated with this route
+        if (menuTitles && menuTitles.length > 0) {
+          const hasMenuAccess = menuTitles.some(title => userAccess.includes(title));
+          if (hasMenuAccess) {
+            return <>{children}</>;
+          }
+        }
+        
+        // Fallback: check direct requiredAccess match
+        if (userAccess.includes(requiredAccess)) {
           return <>{children}</>;
         }
       } catch (e) {}
