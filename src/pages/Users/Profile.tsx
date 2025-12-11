@@ -4,8 +4,9 @@ import { IRootState } from '../../store';
 import Dropdown from '../../components/Dropdown';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { getRequest, postRequest, deleteRequest } from '../../utils/Request';
 import { config } from '../../config';
+import Logger from '../../utils/Logger';
 
 const Profile = () => {
     const dispatch = useDispatch();
@@ -33,21 +34,14 @@ const Profile = () => {
     
     const fetchProfileData = async () => {
         try {
-            const token = localStorage.getItem('accessToken');
-            if (!token) {
-                console.error('No token found in localStorage');
-                return;
+            const response = await getRequest('/v1/userAccess/profile');
+            Logger.log('Profile Data:', response.user);
+            if (response.user.userAddress) {
+                Logger.log('Address Data:', typeof response.user.userAddress === 'string' ? JSON.parse(response.user.userAddress) : response.user.userAddress);
             }
-            const response = await axios.get(`${config.API_BASE_URL}v1/userAccess/profile`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            console.log('Profile Data:', response.data.user);
-            if (response.data.user.userAddress) {
-                console.log('Address Data:', typeof response.data.user.userAddress === 'string' ? JSON.parse(response.data.user.userAddress) : response.data.user.userAddress);
-            }
-            setProfileData(response.data.user);
+            setProfileData(response.user);
         } catch (error: any) {
-            console.error('Error fetching profile:', error);
+            Logger.error('Error fetching profile:', error);
         } finally {
             setLoading(false);
         }
@@ -55,40 +49,28 @@ const Profile = () => {
 
     const fetchSocialLinks = async () => {
         try {
-            const token = localStorage.getItem('accessToken');
-            if (!token) return;
-            const response = await axios.get(`${config.API_BASE_URL}v1/social/my-links`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setSocialLinks(response.data.socialLinks || {});
+            const response = await getRequest('/v1/social/my-links');
+            setSocialLinks(response.socialLinks || {});
         } catch (error: any) {
-            console.error('Error fetching social links:', error);
+            Logger.error('Error fetching social links:', error);
         }
     };
 
     const fetchLeaveSummary = async () => {
         try {
-            const token = localStorage.getItem('accessToken');
-            if (!token) return;
-            const response = await axios.get(`${config.API_BASE_URL}v1/userAccess/leave-summary`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setLeaveSummary(response.data.data || []);
+            const response = await getRequest('/v1/userAccess/leave-summary');
+            setLeaveSummary(response.data || []);
         } catch (error: any) {
-            console.error('Error fetching leave summary:', error);
+            Logger.error('Error fetching leave summary:', error);
         }
     };
 
     const fetchAttendance = async () => {
         try {
-            const token = localStorage.getItem('accessToken');
-            if (!token) return;
-            const response = await axios.get(`${config.API_BASE_URL}v1/userAccess/attendance-last-7-days`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setAttendance(response.data.attendance || []);
+            const response = await getRequest('/v1/userAccess/attendance-last-7-days');
+            setAttendance(response.attendance || []);
         } catch (error: any) {
-            console.error('Error fetching attendance:', error);
+            Logger.error('Error fetching attendance:', error);
         }
     };
 
@@ -107,58 +89,42 @@ const Profile = () => {
 
     const fetchBankDetails = async () => {
         try {
-            const token = localStorage.getItem('accessToken');
-            if (!token) return;
-            const response = await axios.get(`${config.API_BASE_URL}v1/userAccess/user-bank-details`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setBankDetails(response.data.bankDetails || []);
+            const response = await getRequest('/v1/userAccess/user-bank-details');
+            setBankDetails(response.bankDetails || []);
         } catch (error: any) {
-            console.error('Error fetching bank details:', error);
+            Logger.error('Error fetching bank details:', error);
         }
     };
 
     const handleDeleteBank = async (bankId: number) => {
         if (!confirm('Are you sure you want to delete this bank account?')) return;
         try {
-            const token = localStorage.getItem('accessToken');
-            if (!token) return;
-            await axios.delete(`${config.API_BASE_URL}v1/userAccess/user-bank-details/${bankId}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await deleteRequest(`/v1/userAccess/user-bank-details/${bankId}`);
             fetchBankDetails();
         } catch (error: any) {
-            console.error('Error deleting bank details:', error);
+            Logger.error('Error deleting bank details:', error);
         }
     };
 
     const handleAddBank = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const token = localStorage.getItem('accessToken');
-            if (!token) return;
-            await axios.post(`${config.API_BASE_URL}v1/userAccess/user-bank-details`, bankForm, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await postRequest('/v1/userAccess/user-bank-details', bankForm);
             setBankForm({ bankAccountNumber: '', bankIfscCode: '', bankName: '', bankBranchAddress: '' });
             setShowAddBankModal(false);
             fetchBankDetails();
         } catch (error: any) {
-            console.error('Error adding bank details:', error);
+            Logger.error('Error adding bank details:', error);
             alert('Failed to add bank details');
         }
     };
 
     const fetchSalaryHistory = async () => {
         try {
-            const token = localStorage.getItem('accessToken');
-            if (!token) return;
-            const response = await axios.get(`${config.API_BASE_URL}v1/userAccess/salary-history?limit=1`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setSalaryHistory(response.data.salaries || []);
+            const response = await getRequest('/v1/userAccess/salary-history', { limit: 1 });
+            setSalaryHistory(response.salaries || []);
         } catch (error: any) {
-            console.error('Error fetching salary history:', error);
+            Logger.error('Error fetching salary history:', error);
         }
     };
 
@@ -422,7 +388,7 @@ const Profile = () => {
                             {profileData?.userAddress ? (() => {
                                 try {
                                     const address = typeof profileData.userAddress === 'string' ? JSON.parse(profileData.userAddress) : profileData.userAddress;
-                                    console.log('Address object:', address);
+                                    Logger.log('Address object:', address);
                                     return (
                                         <div className="space-y-3">
                                             <p className="text-[#515365] dark:text-white-light">
@@ -744,7 +710,7 @@ const Profile = () => {
                                 <button 
                                     onClick={async () => {
                                         const token = localStorage.getItem('accessToken');
-                                        const response = await fetch(`${config.API_BASE_URL}v1/userAccess/salary-slip/${selectedSalary.salaryId}`, {
+                                        const response = await fetch(`${config.API_BASE_URL}/v1/userAccess/salary-slip/${selectedSalary.salaryId}`, {
                                             headers: { Authorization: `Bearer ${token}` }
                                         });
                                         const blob = await response.blob();
