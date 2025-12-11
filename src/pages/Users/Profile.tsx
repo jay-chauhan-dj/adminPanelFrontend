@@ -34,7 +34,7 @@ const Profile = () => {
     
     const fetchProfileData = async () => {
         try {
-            const response = await getRequest('v1/userAccess/profile');
+            const response = await getRequest('/v1/userAccess/profile');
             Logger.log('Profile Data:', response.user);
             if (response.user.userAddress) {
                 Logger.log('Address Data:', typeof response.user.userAddress === 'string' ? JSON.parse(response.user.userAddress) : response.user.userAddress);
@@ -49,7 +49,7 @@ const Profile = () => {
 
     const fetchSocialLinks = async () => {
         try {
-            const response = await getRequest('v1/social/my-links');
+            const response = await getRequest('/v1/social/my-links');
             setSocialLinks(response.socialLinks || {});
         } catch (error: any) {
             Logger.error('Error fetching social links:', error);
@@ -58,7 +58,7 @@ const Profile = () => {
 
     const fetchLeaveSummary = async () => {
         try {
-            const response = await getRequest('v1/userAccess/leave-summary');
+            const response = await getRequest('/v1/userAccess/leave-summary');
             setLeaveSummary(response.data || []);
         } catch (error: any) {
             Logger.error('Error fetching leave summary:', error);
@@ -67,7 +67,7 @@ const Profile = () => {
 
     const fetchAttendance = async () => {
         try {
-            const response = await getRequest('v1/userAccess/attendance-last-7-days');
+            const response = await getRequest('/v1/userAccess/attendance-last-7-days');
             setAttendance(response.attendance || []);
         } catch (error: any) {
             Logger.error('Error fetching attendance:', error);
@@ -89,7 +89,7 @@ const Profile = () => {
 
     const fetchBankDetails = async () => {
         try {
-            const response = await getRequest('v1/userAccess/user-bank-details');
+            const response = await getRequest('/v1/userAccess/user-bank-details');
             setBankDetails(response.bankDetails || []);
         } catch (error: any) {
             Logger.error('Error fetching bank details:', error);
@@ -99,7 +99,7 @@ const Profile = () => {
     const handleDeleteBank = async (bankId: number) => {
         if (!confirm('Are you sure you want to delete this bank account?')) return;
         try {
-            await deleteRequest(`v1/userAccess/user-bank-details/${bankId}`);
+            await deleteRequest(`/v1/userAccess/user-bank-details/${bankId}`);
             fetchBankDetails();
         } catch (error: any) {
             Logger.error('Error deleting bank details:', error);
@@ -109,7 +109,7 @@ const Profile = () => {
     const handleAddBank = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await postRequest('v1/userAccess/user-bank-details', bankForm);
+            await postRequest('/v1/userAccess/user-bank-details', bankForm);
             setBankForm({ bankAccountNumber: '', bankIfscCode: '', bankName: '', bankBranchAddress: '' });
             setShowAddBankModal(false);
             fetchBankDetails();
@@ -121,7 +121,7 @@ const Profile = () => {
 
     const fetchSalaryHistory = async () => {
         try {
-            const response = await getRequest('v1/userAccess/salary-history', { limit: 1 });
+            const response = await getRequest('/v1/userAccess/salary-history', { limit: 1 });
             setSalaryHistory(response.salaries || []);
         } catch (error: any) {
             Logger.error('Error fetching salary history:', error);
@@ -710,7 +710,7 @@ const Profile = () => {
                                 <button 
                                     onClick={async () => {
                                         const token = localStorage.getItem('accessToken');
-                                        const response = await fetch(`${config.API_BASE_URL}v1/userAccess/salary-slip/${selectedSalary.salaryId}`, {
+                                        const response = await fetch(`${config.API_BASE_URL}/v1/userAccess/salary-slip/${selectedSalary.salaryId}`, {
                                             headers: { Authorization: `Bearer ${token}` }
                                         });
                                         const blob = await response.blob();
