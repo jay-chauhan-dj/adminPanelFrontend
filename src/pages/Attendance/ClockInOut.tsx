@@ -3,7 +3,8 @@ import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
-import { getRequest, postRequest } from '../../utils/Request';
+import { getRequest, postRequest, deleteRequest } from '../../utils/Request';
+import CameraManager from '../../utils/CameraManager';
 
 const LiveTime = ({ baseTime }: { baseTime?: string }) => {
     const [time, setTime] = useState('');
@@ -22,6 +23,7 @@ const ClockInOut = () => {
     const navigate = useNavigate();
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const streamRef = useRef<MediaStream | null>(null);
     const [stream, setStream] = useState<MediaStream | null>(null);
     const [loading, setLoading] = useState(false);
     const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -45,7 +47,25 @@ const ClockInOut = () => {
         fetchTodayAttendance();
         startCamera();
         getLocation();
-        return () => stopCamera();
+        
+        const handleVisibilityChange = () => {
+            stopCamera();
+        };
+
+        const handleBeforeUnload = () => {
+            stopCamera();
+        };
+        
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        window.addEventListener('pagehide', stopCamera);
+        
+        return () => {
+            stopCamera();
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+            window.removeEventListener('pagehide', stopCamera);
+        };
     }, []);
 
     useEffect(() => {
@@ -116,8 +136,7 @@ const ClockInOut = () => {
 
         if (result.isConfirmed) {
             try {
-                const token = localStorage.getItem('accessToken');
-                const data = await getRequest(`/v1/attendance/delete-face`, {}, headers);
+                const data = await deleteRequest(`/v1/attendance/delete-face`, {}, headers);
                 if (data.success) {
                     await Swal.fire('Deleted!', 'Your face data has been deleted.', 'success');
                     setHasBiometric(false);
@@ -133,6 +152,8 @@ const ClockInOut = () => {
     const startCamera = async () => {
         try {
             const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            CameraManager.setStream(mediaStream);
+            streamRef.current = mediaStream;
             setStream(mediaStream);
             if (videoRef.current) {
                 videoRef.current.srcObject = mediaStream;
@@ -143,9 +164,10 @@ const ClockInOut = () => {
     };
 
     const stopCamera = () => {
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-        }
+        CameraManager.stopAll();
+        streamRef.current = null;
+        if (videoRef.current) videoRef.current.srcObject = null;
+        setStream(null);
     };
 
     const getLocation = () => {
@@ -222,6 +244,7 @@ const ClockInOut = () => {
                         cancelButtonText: 'Cancel'
                     });
                     if (result.isConfirmed) {
+                        stopCamera();
                         navigate('/attendance/register-face');
                     }
                 } else {
@@ -401,7 +424,10 @@ const ClockInOut = () => {
                                 <button
                                     type="button"
                                     className="btn btn-primary w-full"
-                                    onClick={() => navigate('/attendance/register-face')}
+                                    onClick={() => {
+                                        stopCamera();
+                                        navigate('/attendance/register-face');
+                                    }}
                                 >
                                     Register Face Now
                                 </button>

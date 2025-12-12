@@ -4,12 +4,14 @@ import { setPageTitle } from '../../store/themeConfigSlice';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { postRequest, getRequest } from '../../utils/Request';
+import CameraManager from '../../utils/CameraManager';
 
 const RegisterFace = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const streamRef = useRef<MediaStream | null>(null);
     const [stream, setStream] = useState<MediaStream | null>(null);
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({ name: '', employee_code: '', userId: '' });
@@ -24,7 +26,25 @@ const RegisterFace = () => {
         dispatch(setPageTitle('Register Face'));
         fetchCurrentUser();
         startCamera();
-        return () => stopCamera();
+        
+        const handleVisibilityChange = () => {
+            stopCamera();
+        };
+
+        const handleBeforeUnload = () => {
+            stopCamera();
+        };
+        
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        window.addEventListener('pagehide', stopCamera);
+        
+        return () => {
+            stopCamera();
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+            window.removeEventListener('pagehide', stopCamera);
+        };
     }, []);
 
     const fetchCurrentUser = async () => {
@@ -32,6 +52,7 @@ const RegisterFace = () => {
             const data = await getRequest('/v1/attendance/current-user', {}, headers);
             if (data.success && data.user) {
                 if (data.user.hasBiometric) {
+                    stopCamera();
                     navigate('/attendance/clock-in-out', { replace: true });
                     return;
                 }
@@ -51,6 +72,8 @@ const RegisterFace = () => {
     const startCamera = async () => {
         try {
             const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            CameraManager.setStream(mediaStream);
+            streamRef.current = mediaStream;
             setStream(mediaStream);
             if (videoRef.current) {
                 videoRef.current.srcObject = mediaStream;
@@ -61,9 +84,10 @@ const RegisterFace = () => {
     };
 
     const stopCamera = () => {
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-        }
+        CameraManager.stopAll();
+        streamRef.current = null;
+        if (videoRef.current) videoRef.current.srcObject = null;
+        setStream(null);
     };
 
     const captureImage = (): string | null => {
@@ -96,6 +120,7 @@ const RegisterFace = () => {
             const data = await postRequest('/v1/attendance/register-face', requestData, {}, headers);
 
             if (data.success) {
+                stopCamera();
                 await Swal.fire('Success', 'Face registered successfully!', 'success');
                 navigate('/attendance/clock-in-out');
             } else {
@@ -189,7 +214,10 @@ const RegisterFace = () => {
                             <button
                                 type="button"
                                 className="btn btn-outline-secondary w-full"
-                                onClick={() => navigate('/attendance/clock-in-out')}
+                                onClick={() => {
+                                    stopCamera();
+                                    navigate('/attendance/clock-in-out');
+                                }}
                             >
                                 Back to Attendance
                             </button>

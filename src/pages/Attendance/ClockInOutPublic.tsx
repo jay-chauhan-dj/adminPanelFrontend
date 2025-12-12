@@ -7,6 +7,7 @@ const ClockInOutPublic = () => {
     const navigate = useNavigate();
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const streamRef = useRef<MediaStream | null>(null);
     const [stream, setStream] = useState<MediaStream | null>(null);
     const [loading, setLoading] = useState(false);
     const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -16,12 +17,25 @@ const ClockInOutPublic = () => {
     useEffect(() => {
         startCamera();
         getLocation();
-        return () => stopCamera();
+        
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                stopCamera();
+            }
+        };
+        
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        
+        return () => {
+            stopCamera();
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
     }, []);
 
     const startCamera = async () => {
         try {
             const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            streamRef.current = mediaStream;
             setStream(mediaStream);
             if (videoRef.current) {
                 videoRef.current.srcObject = mediaStream;
@@ -32,9 +46,18 @@ const ClockInOutPublic = () => {
     };
 
     const stopCamera = () => {
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => {
+                track.stop();
+                track.enabled = false;
+            });
+            streamRef.current = null;
         }
+        if (videoRef.current && videoRef.current.srcObject) {
+            videoRef.current.srcObject = null;
+            videoRef.current.load();
+        }
+        setStream(null);
     };
 
     const getLocation = () => {
